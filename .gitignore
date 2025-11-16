@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+env/
+ENV/
+
+# PyInstaller
+*.manifest
+# *.spec - Excluded, but we keep Client/aldersync.spec for builds
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AlderSync specific
+*.log
+*.db
+*.db-journal
+.aldersync/
+
+# Client downloads folder (executables)
+client_downloads/*
+!client_downloads/README.md
+
+# Sensitive data
+config.json
+credentials.json
+*.env
+
+# Communication with Claude
+errors.txt
+nul
+.claude/
+CLAUDE.md
+
+# Portainer deployment - exclude large tar file
+Server/portainer-deployment/*.tar
+
+# Server storage - exclude all uploaded files (keep directory structure)
+Server/storage/Contemporary/*
+!Server/storage/Contemporary/.gitkeep
+Server/storage/Traditional/*
+!Server/storage/Traditional/.gitkeep
+
+# Database files
+Server/database/*.db
+Server/database/*.db-journal
+!Server/database/.gitkeep
+
+# Other
+Description.md
+Plan.md
+progress.html
+Refinements.md
+RevisedDescription.md
+Specification.md
+update_progress.py

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AlderSync Admin{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-change positive">{{ stats.active_users }} active</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Contemporary Files</div>
+            <div class="stat-value">{{ stats.contemporary_files }}</div>
+            <div class="stat-change">Current: {{ stats.contemporary_size }}</div>
+            <div class="stat-change neutral">Total: {{ stats.contemporary_total_storage }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Traditional Files</div>
+            <div class="stat-value">{{ stats.traditional_files }}</div>
+            <div class="stat-change">Current: {{ stats.traditional_size }}</div>
+            <div class="stat-change neutral">Total: {{ stats.traditional_total_storage }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Total Operations</div>
+            <div class="stat-value">{{ stats.total_operations }}</div>
+            <div class="stat-change">All time</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Recent Activity</h2>
+        <div class="card-content">
+            {% if recent_operations %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Operation</th>
+                            <th>Service</th>
+                            <th>Time</th>
+                            <th>Files</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for op in recent_operations %}
+                        <tr>
+                            <td>{{ op.username }}</td>
+                            <td>{{ op.operation_type }}</td>
+                            <td>{{ op.service_type }}</td>
+                            <td class="utc-time" data-utc="{% if op.completed_at_utc %}{{ op.completed_at_utc.isoformat() }}Z{% endif %}">{{ op.completed_at_utc if op.completed_at_utc else "N/A" }}</td>
+                            <td>
+                                {% if op.operation_type == 'Reconcile' %}
+                                    ↓{{ op.files_pulled }} ↑{{ op.files_pushed }}
+                                {% else %}
+                                    {{ op.files_pulled or op.files_pushed or 0 }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if op.status == 'completed' %}
+                                <span class="badge badge-success">Completed</span>
+                                {% elif op.status == 'active' %}
+                                <span class="badge badge-info">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">{{ op.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-secondary);">No recent operations</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Server Status</h2>
+        <div class="card-content">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--text-secondary); margin-bottom: 0.25rem;">Server Lock</div>
+                    <div style="font-size: 1.125rem;">
+                        {% if lock_info %}
+                        <span class="badge badge-warning">Locked by {{ lock_info.user }}</span>
+                        {% else %}
+                        <span class="badge badge-success">Available</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-weight: 500; color: var(--text-secondary); margin-bottom: 0.25rem;">Last Operation</div>
+                    <div style="font-size: 1.125rem;">
+                        {% if last_operation %}
+                        {{ last_operation.operation }} by {{ last_operation.user }}
+                        {% else %}
+                        None
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-weight: 500; color: var(--text-secondary); margin-bottom: 0.25rem;">Version</div>
+                    <div style="font-size: 1.125rem;">{{ version }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Convert all UTC times to local timezone
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeElements = document.querySelectorAll('.utc-time');
+
+        timeElements.forEach(element => {
+            const utcTime = element.getAttribute('data-utc');
+            if (utcTime) {
+                try {
+                    const date = new Date(utcTime);
+
+                    // Format the local time as "MMM DD, YYYY HH:MM AM/PM"
+                    const options = {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+
+                    const localTime = date.toLocaleString(undefined, options);
+                    element.textContent = localTime;
+                } catch (e) {
+                    console.error('Error converting time:', e);
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}

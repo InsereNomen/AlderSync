@@ -1,0 +1,85 @@
+# AlderSync Server Docker Compose Configuration for Portainer
+# This orchestrates the AlderSync server deployment with persistent data storage
+#
+# IMPORTANT: Before deploying this stack in Portainer:
+# 1. Import the aldersync-server-image.tar file via Portainer's Images interface
+# 2. Tag the imported image as: server-aldersync-server:latest
+# 3. Then create this stack in Portainer
+
+services:
+  aldersync-server:
+    # Use the pre-built image imported from aldersync-server-image.tar
+    image: server-aldersync-server:latest
+
+    # Container name for easy reference
+    container_name: aldersync-server
+
+    # Port mapping: host:container
+    # Maps port 8000 on the host to port 8000 in the container
+    ports:
+      - "8253:8000"
+
+    # Volume mounts for data persistence
+    # These ensure data survives container restarts and updates
+    volumes:
+      # SQLite database storage (bind mount)
+      - /volume1/Aldersync/database:/app/database
+
+      # File storage for Contemporary service (bind mount)
+      - /volume1/Aldersync/storage/Contemporary:/app/storage/Contemporary
+
+      # File storage for Traditional service (bind mount)
+      - /volume1/Aldersync/storage/Traditional:/app/storage/Traditional
+
+      # Client downloads folder for distributing client application files (bind mount)
+      - /volume1/Aldersync/client_downloads:/app/client_downloads
+
+      # Log file persistence (bind mount)
+      - /volume1/Aldersync/logs:/app/logs
+
+    # Environment variables for server configuration
+    environment:
+      # Keep Python output unbuffered for better logging
+      - PYTHONUNBUFFERED=1
+
+      # Optional: Configure database path (default: /app/database/aldersync.db)
+      # - DB_PATH=/app/database/aldersync.db
+
+      # Optional: Configure storage paths
+      # - CONTEMPORARY_PATH=/app/storage/Contemporary
+      # - TRADITIONAL_PATH=/app/storage/Traditional
+
+      # Optional: Configure log level
+      # - LOG_LEVEL=INFO
+
+    # Restart policy: always restart unless explicitly stopped
+    restart: unless-stopped
+
+    # Health check inherited from Dockerfile
+    # Ensures container is marked unhealthy if server stops responding
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+
+    # Resource limits (optional, adjust based on your NAS capabilities)
+    # Uncomment and adjust these values if needed
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 256M
+
+# Networks (optional)
+# Using default bridge network is sufficient for single-service deployment
+# networks:
+#   aldersync-network:
+#     driver: bridge
+
+# Note: All data is now stored in bind mounts for easy access and backup
+# No named volumes are required

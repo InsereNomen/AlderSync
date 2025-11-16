@@ -1,0 +1,83 @@
+name: Build AlderSync Client
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'Client/**'
+      - '.github/workflows/build-client.yml'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - 'Client/**'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-windows:
+    name: Build Windows Client
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd Client
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Windows executable
+        run: |
+          cd Client
+          pyinstaller aldersync.spec
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlderSync-Windows
+          path: Client/dist/aldersync.exe
+          retention-days: 30
+
+  build-macos:
+    name: Build macOS Client
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd Client
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build macOS application
+        run: |
+          cd Client
+          pyinstaller aldersync.spec
+
+      - name: Create ZIP of .app bundle
+        run: |
+          cd Client/dist
+          zip -r AlderSync-macOS.zip AlderSync.app
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlderSync-macOS
+          path: Client/dist/AlderSync-macOS.zip
+          retention-days: 30

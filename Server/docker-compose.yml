@@ -1,0 +1,84 @@
+# AlderSync Server Docker Compose Configuration
+# This orchestrates the AlderSync server deployment with persistent data storage
+
+version: '3.8'
+
+services:
+  aldersync-server:
+    # Build from local Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Container name for easy reference
+    container_name: aldersync-server
+
+    # Port mapping: host:container
+    # Maps port 8000 on the host to port 8000 in the container
+    ports:
+      - "8000:8000"
+
+    # Volume mounts for data persistence
+    # These ensure data survives container restarts and updates
+    volumes:
+      # SQLite database storage (bind mount)
+      - ./database:/app/database
+
+      # File storage for Contemporary service (bind mount)
+      - ./storage/Contemporary:/app/storage/Contemporary
+
+      # File storage for Traditional service (bind mount)
+      - ./storage/Traditional:/app/storage/Traditional
+
+      # Client downloads folder for distributing client application files (bind mount)
+      - ./client_downloads:/app/client_downloads
+
+      # Log file persistence (bind mount)
+      - ./logs:/app/logs
+
+    # Environment variables for server configuration
+    environment:
+      # Keep Python output unbuffered for better logging
+      - PYTHONUNBUFFERED=1
+
+      # Optional: Configure database path (default: /app/database/aldersync.db)
+      # - DB_PATH=/app/database/aldersync.db
+
+      # Optional: Configure storage paths
+      # - CONTEMPORARY_PATH=/app/storage/Contemporary
+      # - TRADITIONAL_PATH=/app/storage/Traditional
+
+      # Optional: Configure log level
+      # - LOG_LEVEL=INFO
+
+    # Restart policy: always restart unless explicitly stopped
+    restart: unless-stopped
+
+    # Health check inherited from Dockerfile
+    # Ensures container is marked unhealthy if server stops responding
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+
+    # Resource limits (optional, adjust based on your NAS capabilities)
+    # Uncomment and adjust these values if needed
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 256M
+
+# Networks (optional)
+# Using default bridge network is sufficient for single-service deployment
+# networks:
+#   aldersync-network:
+#     driver: bridge
+
+# Note: All data is now stored in bind mounts for easy access and backup
+# No named volumes are required

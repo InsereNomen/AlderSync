@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <rect width="800" height="450" fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+  <text x="400" y="225" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#666">
+    PLACEHOLDER: Revision History Window Screenshot
+  </text>
+  <text x="400" y="255" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#999">
+    Replace with actual screenshot
+  </text>
+</svg>

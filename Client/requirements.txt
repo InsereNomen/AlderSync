@@ -1,0 +1,11 @@
+# AlderSync Client Dependencies
+# All dependencies meet external module criteria (100k+ daily downloads)
+
+# HTTP Client - Clean REST API interface (60M+ downloads/day)
+requests>=2.31.0
+
+# OS Credential Store - Secure password storage (6M+ downloads/day)
+keyring>=24.0.0
+
+# Cross-platform process detection - ProPresenter process checking (10M+ downloads/day)
+psutil>=5.9.0

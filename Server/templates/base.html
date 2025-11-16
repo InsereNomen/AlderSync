@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AlderSync Admin{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <style>
+        /* Dropdown menu styles */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .nav-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-bg);
+            min-width: 180px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            z-index: 1;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .nav-dropdown-content a {
+            color: var(--text-color) !important;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .nav-dropdown-content a:hover {
+            background-color: var(--bg-color);
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .theme-icon-light {
+            display: none;
+        }
+
+        .theme-icon-dark {
+            display: inline;
+        }
+
+        [data-theme="dark"] .theme-icon-light {
+            display: inline;
+        }
+
+        [data-theme="dark"] .theme-icon-dark {
+            display: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .theme-icon-light {
+                display: inline;
+            }
+
+            :root:not([data-theme="light"]) .theme-icon-dark {
+                display: none;
+            }
+        }
+
+        .nav-dropdown:hover .nav-dropdown-content {
+            display: block;
+        }
+
+        .nav-dropdown > a::after {
+            content: " ▼";
+            font-size: 10px;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if show_nav %}
+    <header class="header">
+        <div class="header-content">
+            <h1 class="header-title">AlderSync Admin</h1>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="/admin/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="/admin/users" class="{% if active_page == 'users' %}active{% endif %}">Users</a></li>
+                    <li><a href="/admin/files" class="{% if active_page == 'files' %}active{% endif %}">Files</a></li>
+                    <li><a href="/admin/operations" class="{% if active_page == 'operations' %}active{% endif %}">Operations</a></li>
+                    <li><a href="/admin/downloads" class="{% if active_page == 'downloads' %}active{% endif %}">Downloads</a></li>
+                    <li><a href="/admin/settings" class="{% if active_page == 'settings' %}active{% endif %}">Settings</a></li>
+                    <li class="nav-dropdown">
+                        <a href="/admin/docs/user" class="{% if active_page == 'docs' %}active{% endif %}">Docs</a>
+                        <div class="nav-dropdown-content">
+                            <a href="/admin/docs/user">User</a>
+                            {% if is_admin %}
+                            <a href="/admin/docs/admin">Admin</a>
+                            <a href="/admin/docs/technical">Technical</a>
+                            <a href="/docs" target="_blank">API</a>
+                            {% endif %}
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+                    <span class="theme-icon-light">☀</span>
+                    <span class="theme-icon-dark">☾</span>
+                </button>
+                <span class="username">{{ username }}</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // Theme management
+        function getPreferredTheme() {
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme) {
+                return storedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function setTheme(theme) {
+            if (theme === 'auto') {
+                localStorage.removeItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            } else {
+                localStorage.setItem('theme', theme);
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme');
+            if (!currentTheme) {
+                // Currently auto, switch to opposite of system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                setTheme(prefersDark ? 'light' : 'dark');
+            } else if (currentTheme === 'light') {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+        }
+
+        // Apply theme on page load
+        setTheme(getPreferredTheme());
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                setTheme('auto');
+            }
+        });
+
+        function logout() {
+            // Clear session cookie
+            document.cookie = "admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            // Redirect to login
+            window.location.href = "/admin/login";
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

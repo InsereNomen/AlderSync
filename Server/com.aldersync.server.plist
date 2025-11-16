@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Service label - must match filename -->
+    <key>Label</key>
+    <string>com.aldersync.server</string>
+
+    <!-- Program to run -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/aldersync/venv/bin/python</string>
+        <string>/usr/local/aldersync/server.py</string>
+    </array>
+
+    <!-- Working directory -->
+    <key>WorkingDirectory</key>
+    <string>/usr/local/aldersync</string>
+
+    <!-- Run on load (at boot) -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Keep alive - restart if crashed -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!-- Throttle restart interval -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <!-- Standard output log -->
+    <key>StandardOutPath</key>
+    <string>/usr/local/aldersync/logs/aldersync-stdout.log</string>
+
+    <!-- Standard error log -->
+    <key>StandardErrorPath</key>
+    <string>/usr/local/aldersync/logs/aldersync-stderr.log</string>
+
+    <!-- Environment variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+
+    <!-- Resource limits -->
+    <key>SoftResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>4096</integer>
+    </dict>
+
+    <!-- Process type -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>

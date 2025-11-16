@@ -1,0 +1,1871 @@
+{% extends "base.html" %}
+
+{% block title %}Administrative Documentation - AlderSync{% endblock %}
+
+{% block extra_head %}
+<style>
+    .docs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: var(--card-bg);
+    }
+
+    .docs-nav {
+        background: var(--bg-color);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        position: sticky;
+        top: 20px;
+    }
+
+    .docs-nav h3 {
+        margin-top: 0;
+        color: var(--text-color);
+    }
+
+    .docs-nav ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .docs-nav li {
+        margin: 8px 0;
+    }
+
+    .docs-nav a {
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 5px 10px;
+        display: block;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .docs-nav a:visited {
+        color: var(--primary-color);
+    }
+
+    .docs-nav a:hover {
+        background: var(--card-bg);
+    }
+
+    .docs-content {
+        line-height: 1.6;
+    }
+
+    .docs-content a {
+        color: var(--primary-color);
+    }
+
+    .docs-content a:visited {
+        color: var(--primary-color);
+        opacity: 0.8;
+    }
+
+    .docs-section {
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .docs-section h2 {
+        color: var(--text-color);
+        margin-top: 0;
+        padding-top: 20px;
+    }
+
+    .docs-section h3 {
+        color: var(--text-color);
+        margin-top: 25px;
+    }
+
+    .diagram {
+        background: var(--card-bg);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        font-family: 'Courier New', monospace;
+    }
+
+    .architecture-diagram {
+        background: var(--bg-color);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    .arch-layer {
+        background: var(--card-bg);
+        border: 2px solid var(--primary-color);
+        border-radius: 5px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .arch-layer-client {
+        background: rgba(37, 99, 235, 0.15);
+        border-color: var(--primary-color);
+    }
+
+    .arch-layer-app {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: var(--warning-color);
+    }
+
+    .arch-layer-data {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: var(--danger-color);
+    }
+
+    .status-active {
+        color: var(--success-color);
+        font-weight: 600;
+    }
+
+    .status-disabled {
+        color: var(--danger-color);
+        font-weight: 600;
+    }
+
+    .warning-box {
+        background: rgba(245, 158, 11, 0.15);
+        border-left: 4px solid var(--warning-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .info-box {
+        background: rgba(37, 99, 235, 0.15);
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .tip-box {
+        background: rgba(16, 185, 129, 0.15);
+        border-left: 4px solid var(--success-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .danger-box {
+        background: rgba(239, 68, 68, 0.15);
+        border-left: 4px solid var(--danger-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    code {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+    }
+
+    pre {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        border: 1px solid var(--border-color);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+    }
+
+    table th, table td {
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        text-align: left;
+    }
+
+    table th {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    table td {
+        color: var(--text-color);
+    }
+
+    table tr:nth-child(even) {
+        background: var(--bg-color);
+    }
+
+    table tr:nth-child(odd) {
+        background: var(--card-bg);
+    }
+
+    .command-box {
+        background: var(--bg-color);
+        color: var(--success-color);
+        padding: 15px;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+        margin: 15px 0;
+        border: 1px solid var(--border-color);
+    }
+
+    .screenshot {
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        background: var(--bg-color);
+    }
+
+    .screenshot-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: var(--text-color);
+    }
+
+    .file-tree {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        margin: 15px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <h1>AlderSync Administrative Documentation</h1>
+    <p>This guide provides comprehensive information for administrators managing the AlderSync server, including deployment, configuration, user management, and maintenance.</p>
+
+    <div style="display: grid; grid-template-columns: 250px 1fr; gap: 30px;">
+        <div class="docs-nav">
+            <h3>Contents</h3>
+            <ul>
+                <li><a href="#overview">1. System Overview</a></li>
+                <li><a href="#deployment">2. Server Deployment</a></li>
+                <li><a href="#docker">3. Docker Deployment</a></li>
+                <li><a href="#admin-interface">4. Admin Web Interface</a></li>
+                <li><a href="#user-mgmt">5. User Management</a></li>
+                <li><a href="#role-mgmt">6. Role Management</a></li>
+                <li><a href="#operations">7. Operations Monitoring</a></li>
+                <li><a href="#file-mgmt">8. File Management</a></li>
+                <li><a href="#settings">9. Server Settings</a></li>
+                <li><a href="#downloads">10. Client Downloads</a></li>
+                <li><a href="#backup">11. Backup & Recovery</a></li>
+                <li><a href="#updates">12. Updating AlderSync</a></li>
+                <li><a href="#monitoring">13. Monitoring & Logs</a></li>
+                <li><a href="#troubleshooting">14. Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <div class="docs-content">
+            <!-- Section 1: System Overview -->
+            <div class="docs-section" id="overview">
+                <h2>1. System Overview</h2>
+
+                <h3>Architecture</h3>
+
+                <div class="architecture-diagram">
+                    <div class="arch-layer arch-layer-client">
+                        <strong>Client Layer</strong><br>
+                        Windows/Mac Desktop Applications<br>
+                        (GUI + CLI modes)
+                    </div>
+                    ⬇ HTTPS/REST API ⬇
+                    <div class="arch-layer arch-layer-app">
+                        <strong>Application Layer</strong><br>
+                        FastAPI Web Server<br>
+                        JWT Authentication + RBAC
+                    </div>
+                    ⬇ SQLAlchemy ORM ⬇
+                    <div class="arch-layer arch-layer-data">
+                        <strong>Data Layer</strong><br>
+                        SQLite Database<br>
+                        File Storage (Contemporary/Traditional)
+                    </div>
+                </div>
+
+                <h3>Key Components</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Web Server</td>
+                        <td>FastAPI + Uvicorn</td>
+                        <td>REST API and admin web interface</td>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td>SQLite</td>
+                        <td>User accounts, file metadata, settings</td>
+                    </tr>
+                    <tr>
+                        <td>Authentication</td>
+                        <td>JWT tokens (HS256)</td>
+                        <td>Secure API access</td>
+                    </tr>
+                    <tr>
+                        <td>Authorization</td>
+                        <td>Role-Based Access Control</td>
+                        <td>Permission management</td>
+                    </tr>
+                    <tr>
+                        <td>File Storage</td>
+                        <td>Filesystem (bind-mounted in Docker)</td>
+                        <td>ProPresenter files and revisions</td>
+                    </tr>
+                    <tr>
+                        <td>Container</td>
+                        <td>Docker + Portainer</td>
+                        <td>Deployment and orchestration</td>
+                    </tr>
+                </table>
+
+                <h3>Default Credentials</h3>
+
+                <div class="danger-box">
+                    <strong>CRITICAL - Security:</strong>
+                    <ul>
+                        <li>Default admin username: <code>admin</code></li>
+                        <li>Default password is generated on first run and displayed in server logs</li>
+                        <li><strong>CHANGE THE ADMIN PASSWORD IMMEDIATELY</strong> after first login</li>
+                        <li>The admin password is shown only once at startup in the logs</li>
+                    </ul>
+                </div>
+
+                <h3>Server Requirements</h3>
+
+                <table>
+                    <tr>
+                        <th>Resource</th>
+                        <th>Minimum</th>
+                        <th>Recommended</th>
+                    </tr>
+                    <tr>
+                        <td>CPU</td>
+                        <td>1 core</td>
+                        <td>2+ cores</td>
+                    </tr>
+                    <tr>
+                        <td>RAM</td>
+                        <td>512 MB</td>
+                        <td>1 GB+</td>
+                    </tr>
+                    <tr>
+                        <td>Disk</td>
+                        <td>1 GB + file storage</td>
+                        <td>10 GB+ for files and revisions</td>
+                    </tr>
+                    <tr>
+                        <td>Network Port</td>
+                        <td>8000 (default)</td>
+                        <td>8000 or custom</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Section 2: Server Deployment -->
+            <div class="docs-section" id="deployment">
+                <h2>2. Server Deployment</h2>
+
+                <p>AlderSync can be deployed in two ways:</p>
+                <ul>
+                    <li><strong>Native Python</strong> - Direct installation on a server (Linux/Mac)</li>
+                    <li><strong>Docker Container</strong> - Recommended for NAS devices and easier management</li>
+                </ul>
+
+                <h3>Native Python Deployment</h3>
+
+                <p><span class="step-number">1</span> Install Python 3.9 or higher</p>
+                <div class="command-box"># Check Python version<br>python3 --version</div>
+
+                <p><span class="step-number">2</span> Clone or copy the AlderSync Server directory to your server</p>
+                <div class="command-box">
+# Example location<br>
+/opt/aldersync/Server/
+                </div>
+
+                <p><span class="step-number">3</span> Create a virtual environment</p>
+                <div class="command-box">
+cd /opt/aldersync/Server<br>
+python3 -m venv venv<br>
+source venv/bin/activate
+                </div>
+
+                <p><span class="step-number">4</span> Install dependencies</p>
+                <div class="command-box">
+pip install -r requirements.txt
+                </div>
+
+                <p><span class="step-number">5</span> Initialize the database</p>
+                <div class="command-box">
+python database.py
+                </div>
+
+                <div class="info-box">
+                    <strong>First Run:</strong> When you run the database initialization, it will:
+                    <ul>
+                        <li>Create the SQLite database (<code>database/aldersync.db</code>)</li>
+                        <li>Create all necessary tables</li>
+                        <li>Create the default admin user</li>
+                        <li>Display the randomly generated admin password (save this!)</li>
+                        <li>Create default roles and permissions</li>
+                    </ul>
+                </div>
+
+                <p><span class="step-number">6</span> Start the server</p>
+                <div class="command-box">
+python server.py<br>
+# Or using uvicorn directly:<br>
+uvicorn server:app --host 0.0.0.0 --port 8000
+                </div>
+
+                <p><span class="step-number">7</span> Access the admin interface at <code>http://your-server:8000/admin</code></p>
+
+                <h3>Running as a System Service (Linux)</h3>
+
+                <p>Create a systemd service file:</p>
+
+                <pre># /etc/systemd/system/aldersync.service
+
+[Unit]
+Description=AlderSync Server
+After=network.target
+
+[Service]
+Type=simple
+User=aldersync
+WorkingDirectory=/opt/aldersync/Server
+Environment="PATH=/opt/aldersync/Server/venv/bin"
+ExecStart=/opt/aldersync/Server/venv/bin/python -m uvicorn server:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target</pre>
+
+                <p>Enable and start the service:</p>
+                <div class="command-box">
+sudo systemctl daemon-reload<br>
+sudo systemctl enable aldersync<br>
+sudo systemctl start aldersync<br>
+sudo systemctl status aldersync
+                </div>
+            </div>
+
+            <!-- Section 3: Docker Deployment -->
+            <div class="docs-section" id="docker">
+                <h2>3. Docker Deployment</h2>
+
+                <p>Docker deployment is the <strong>recommended method</strong> for NAS devices and production environments. It provides isolation, easy updates, and simplified management.</p>
+
+                <h3>Prerequisites</h3>
+
+                <ul>
+                    <li>Docker installed on your NAS/server</li>
+                    <li>Portainer.io installed (recommended for NAS users)</li>
+                    <li>Network port 8000 available</li>
+                </ul>
+
+                <h3>Method 1: Using Portainer (Recommended for NAS)</h3>
+
+                <div class="info-box">
+                    <strong>Complete Portainer deployment instructions are available in:</strong><br>
+                    <code>Server/portainer-deployment/PORTAINER-README.md</code>
+                </div>
+
+                <p><strong>Quick Overview:</strong></p>
+
+                <p><span class="step-number">1</span> Build and export the Docker image on your development machine:</p>
+
+                <div class="command-box">
+cd /path/to/AlderSync/Server<br>
+python update_docker_deployment.py --export
+                </div>
+
+                <p><span class="step-number">2</span> Upload the generated <code>.tar</code> file to your NAS</p>
+
+                <p><span class="step-number">3</span> In Portainer, import the Docker image:</p>
+                <ul>
+                    <li>Navigate to <strong>Images</strong></li>
+                    <li>Click <strong>Import</strong></li>
+                    <li>Upload the <code>aldersync-server-image.tar</code> file</li>
+                </ul>
+
+                <p><span class="step-number">4</span> Create a new Stack:</p>
+                <ul>
+                    <li>Navigate to <strong>Stacks</strong></li>
+                    <li>Click <strong>Add stack</strong></li>
+                    <li>Upload the <code>docker-compose.yml</code> from <code>Server/portainer-deployment/</code></li>
+                    <li><strong>Edit volume paths</strong> to absolute paths on your NAS</li>
+                </ul>
+
+                <div class="screenshot">
+                    <div class="screenshot-title">Example docker-compose.yml volume configuration:</div>
+                    <pre>volumes:
+  # Change these paths to match your NAS:
+  - /volume1/docker/aldersync/database:/app/database
+  - /volume1/docker/aldersync/storage/Contemporary:/app/storage/Contemporary
+  - /volume1/docker/aldersync/storage/Traditional:/app/storage/Traditional
+  - /volume1/docker/aldersync/client_downloads:/app/client_downloads
+  - /volume1/docker/aldersync/logs:/app/logs</pre>
+                </div>
+
+                <p><span class="step-number">5</span> Deploy the stack and wait for container to start</p>
+
+                <p><span class="step-number">6</span> View container logs to get the admin password:</p>
+
+                <div class="screenshot">
+                    <div class="screenshot-title">Container logs will show:</div>
+                    <pre>Admin password: HdXn5$qtdMU@</pre>
+                </div>
+
+                <p><span class="step-number">7</span> Access admin interface at <code>http://nas-ip:8000/admin</code></p>
+
+                <h3>Method 2: Docker Compose (Direct)</h3>
+
+                <p>If not using Portainer, deploy directly with Docker Compose:</p>
+
+                <p><span class="step-number">1</span> Copy the Server directory to your server</p>
+
+                <p><span class="step-number">2</span> Build the Docker image:</p>
+                <div class="command-box">
+cd /path/to/AlderSync/Server<br>
+docker build -t aldersync-server:latest .
+                </div>
+
+                <p><span class="step-number">3</span> Create a <code>docker-compose.yml</code> file:</p>
+
+                <pre>version: '3.8'
+
+services:
+  aldersync-server:
+    image: aldersync-server:latest
+    container_name: aldersync-server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./database:/app/database
+      - ./storage/Contemporary:/app/storage/Contemporary
+      - ./storage/Traditional:/app/storage/Traditional
+      - ./client_downloads:/app/client_downloads
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s</pre>
+
+                <p><span class="step-number">4</span> Start the container:</p>
+                <div class="command-box">
+docker-compose up -d
+                </div>
+
+                <p><span class="step-number">5</span> View logs to get admin password:</p>
+                <div class="command-box">
+docker-compose logs aldersync-server
+                </div>
+
+                <h3>Docker Data Persistence</h3>
+
+                <table>
+                    <tr>
+                        <th>Data Type</th>
+                        <th>Location</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td>Bind mount: <code>./database</code></td>
+                        <td>SQLite database with all metadata</td>
+                    </tr>
+                    <tr>
+                        <td>Contemporary Files</td>
+                        <td>Bind mount: <code>./storage/Contemporary</code></td>
+                        <td>ProPresenter files for Contemporary service</td>
+                    </tr>
+                    <tr>
+                        <td>Traditional Files</td>
+                        <td>Bind mount: <code>./storage/Traditional</code></td>
+                        <td>ProPresenter files for Traditional service</td>
+                    </tr>
+                    <tr>
+                        <td>Client Downloads</td>
+                        <td>Bind mount: <code>./client_downloads</code></td>
+                        <td>Client executable files for distribution</td>
+                    </tr>
+                    <tr>
+                        <td>Logs</td>
+                        <td>Bind mount: <code>./logs</code></td>
+                        <td>Application log files</td>
+                    </tr>
+                </table>
+
+                <div class="tip-box">
+                    <strong>Tip:</strong> All persistent data uses bind mounts and is directly accessible on the host filesystem for easy inspection and backup.
+                </div>
+            </div>
+
+            <!-- Section 4: Admin Web Interface -->
+            <div class="docs-section" id="admin-interface">
+                <h2>4. Admin Web Interface</h2>
+
+                <p>The admin web interface provides a graphical way to manage the AlderSync server.</p>
+
+                <h3>Accessing the Admin Interface</h3>
+
+                <p><span class="step-number">1</span> Open a web browser</p>
+                <p><span class="step-number">2</span> Navigate to <code>http://your-server:8000/admin</code></p>
+                <p><span class="step-number">3</span> Log in with admin credentials</p>
+
+                <h3>Navigation</h3>
+
+                <table>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Dashboard</td>
+                        <td>Overview of server status, recent activity, statistics</td>
+                    </tr>
+                    <tr>
+                        <td>Users</td>
+                        <td>Manage user accounts, roles, and permissions</td>
+                    </tr>
+                    <tr>
+                        <td>Files</td>
+                        <td>Browse, inspect, and manage stored files and revisions</td>
+                    </tr>
+                    <tr>
+                        <td>Operations</td>
+                        <td>Monitor active operations, view history, cancel operations</td>
+                    </tr>
+                    <tr>
+                        <td>Downloads</td>
+                        <td>Manage client executable downloads</td>
+                    </tr>
+                    <tr>
+                        <td>Settings</td>
+                        <td>Configure server settings</td>
+                    </tr>
+                </table>
+
+                <h3>Dashboard</h3>
+
+                <p>The dashboard provides at-a-glance information:</p>
+
+                <ul>
+                    <li><strong>Server Status:</strong> Running, uptime, health</li>
+                    <li><strong>Active Operations:</strong> Current sync operations in progress</li>
+                    <li><strong>Recent Activity:</strong> Latest operations and their status</li>
+                    <li><strong>Storage Statistics:</strong> File counts, disk usage by service</li>
+                    <li><strong>User Statistics:</strong> Total users, active users, recent logins</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Auto-Refresh:</strong> The dashboard automatically refreshes every 30 seconds to show current data.
+                </div>
+            </div>
+
+            <!-- Section 5: User Management -->
+            <div class="docs-section" id="user-mgmt">
+                <h2>5. User Management</h2>
+
+                <p>Navigate to <strong>Users</strong> tab to manage user accounts.</p>
+
+                <h3>Creating a New User</h3>
+
+                <p><span class="step-number">1</span> Click <strong>Create User</strong> button</p>
+                <p><span class="step-number">2</span> Enter username (must be unique)</p>
+                <p><span class="step-number">3</span> Select a role (Admin, Standard User, or Read-Only User)</p>
+                <p><span class="step-number">4</span> Click <strong>Create</strong></p>
+                <p><span class="step-number">5</span> A temporary password will be generated and displayed</p>
+                <p><span class="step-number">6</span> <strong>Copy and provide this password to the user</strong></p>
+
+                <div class="info-box">
+                    <strong>Security:</strong> Temporary passwords are randomly generated and shown only once. Users should change their password immediately after first login.
+                </div>
+
+                <h3>Managing Existing Users</h3>
+
+                <p>From the users list, you can:</p>
+
+                <ul>
+                    <li><strong>View user details:</strong> Username, role, status, last login</li>
+                    <li><strong>Change user role:</strong> Click the role dropdown and select a new role</li>
+                    <li><strong>Disable/Enable user:</strong> Toggle the status switch</li>
+                    <li><strong>Reset password:</strong> Click "Reset Password" to generate a new temporary password</li>
+                </ul>
+
+                <h3>User Status</h3>
+
+                <table>
+                    <tr>
+                        <th>Status</th>
+                        <th>Meaning</th>
+                        <th>Effect</th>
+                    </tr>
+                    <tr>
+                        <td class="status-active">Active</td>
+                        <td>User account is enabled</td>
+                        <td>User can log in and perform operations</td>
+                    </tr>
+                    <tr>
+                        <td class="status-disabled">Disabled</td>
+                        <td>User account is disabled</td>
+                        <td>User cannot log in, existing sessions are invalidated</td>
+                    </tr>
+                </table>
+
+                <div class="warning-box">
+                    <strong>Deleting the Admin User:</strong> The default admin user cannot be deleted or disabled to prevent lockout. Create another admin account before removing admin role from the default admin.
+                </div>
+
+                <h3>Password Management</h3>
+
+                <p><strong>User Password Changes:</strong></p>
+                <ul>
+                    <li>Users can change their own password from the Client settings</li>
+                    <li>Password changes via API require the old password</li>
+                </ul>
+
+                <p><strong>Admin Password Reset:</strong></p>
+                <ul>
+                    <li>Admins can reset any user's password</li>
+                    <li>A new random password is generated</li>
+                    <li>The user must be notified of the new password</li>
+                </ul>
+            </div>
+
+            <!-- Section 6: Role Management -->
+            <div class="docs-section" id="role-mgmt">
+                <h2>6. Role Management</h2>
+
+                <p>AlderSync uses Role-Based Access Control (RBAC) to manage permissions.</p>
+
+                <h3>Default Roles</h3>
+
+                <table>
+                    <tr>
+                        <th>Role</th>
+                        <th>Permissions</th>
+                        <th>Can Do</th>
+                    </tr>
+                    <tr>
+                        <td>Admin</td>
+                        <td>admin, can_push, can_reconcile</td>
+                        <td>Everything - manage users, settings, files, perform all operations</td>
+                    </tr>
+                    <tr>
+                        <td>Standard User</td>
+                        <td>can_push, can_reconcile</td>
+                        <td>Pull, Push, Reconcile operations; view own files</td>
+                    </tr>
+                    <tr>
+                        <td>Read-Only User</td>
+                        <td>None</td>
+                        <td>Pull files only, cannot push or reconcile</td>
+                    </tr>
+                </table>
+
+                <h3>Available Permissions</h3>
+
+                <table>
+                    <tr>
+                        <th>Permission</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>admin</code></td>
+                        <td>Full system access - user management, settings, operations management</td>
+                    </tr>
+                    <tr>
+                        <td><code>can_push</code></td>
+                        <td>Upload files to server (Push operation)</td>
+                    </tr>
+                    <tr>
+                        <td><code>can_reconcile</code></td>
+                        <td>Perform bidirectional sync (Reconcile operation)</td>
+                    </tr>
+                </table>
+
+                <div class="info-box">
+                    <strong>Implicit Permissions:</strong> All users can Pull files (download) regardless of role. The <code>admin</code> permission grants all other permissions automatically.
+                </div>
+
+                <h3>Creating Custom Roles</h3>
+
+                <p><span class="step-number">1</span> Navigate to <strong>Users</strong> tab</p>
+                <p><span class="step-number">2</span> Scroll to the <strong>Roles</strong> section</p>
+                <p><span class="step-number">3</span> Click <strong>Create Role</strong></p>
+                <p><span class="step-number">4</span> Enter role name and description</p>
+                <p><span class="step-number">5</span> Select permissions to grant</p>
+                <p><span class="step-number">6</span> Click <strong>Save</strong></p>
+
+                <h3>Editing Roles</h3>
+
+                <p>You can modify custom roles to add or remove permissions:</p>
+
+                <ul>
+                    <li>Click <strong>Edit</strong> next to the role</li>
+                    <li>Modify permissions by checking/unchecking boxes</li>
+                    <li>Click <strong>Save Changes</strong></li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>System Roles:</strong> The three default roles (Admin, Standard User, Read-Only User) cannot be deleted to prevent accidental lockout. You can modify their permissions, but use caution.
+                </div>
+
+                <h3>Deleting Roles</h3>
+
+                <p>Custom roles can be deleted if:</p>
+                <ul>
+                    <li>No users are currently assigned to the role</li>
+                    <li>The role is not a system default role</li>
+                </ul>
+
+                <p>To delete a role:</p>
+                <p><span class="step-number">1</span> Reassign all users from the role to a different role</p>
+                <p><span class="step-number">2</span> Click <strong>Delete</strong> next to the role</p>
+                <p><span class="step-number">3</span> Confirm deletion</p>
+            </div>
+
+            <!-- Section 7: Operations Monitoring -->
+            <div class="docs-section" id="operations">
+                <h2>7. Operations Monitoring</h2>
+
+                <p>Navigate to <strong>Operations</strong> tab to monitor sync operations.</p>
+
+                <h3>Active Operations</h3>
+
+                <p>This section shows currently running operations:</p>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>User</td>
+                        <td>Username performing the operation</td>
+                    </tr>
+                    <tr>
+                        <td>Operation</td>
+                        <td>Type: Pull, Push, or Reconcile</td>
+                    </tr>
+                    <tr>
+                        <td>Service</td>
+                        <td>Contemporary or Traditional</td>
+                    </tr>
+                    <tr>
+                        <td>Duration</td>
+                        <td>How long the operation has been running</td>
+                    </tr>
+                    <tr>
+                        <td>Files</td>
+                        <td>Number of files uploaded/downloaded</td>
+                    </tr>
+                    <tr>
+                        <td>Actions</td>
+                        <td>Cancel button</td>
+                    </tr>
+                </table>
+
+                <h3>Cancelling an Operation</h3>
+
+                <p>If you need to cancel a user's operation (e.g., due to server maintenance):</p>
+
+                <p><span class="step-number">1</span> Click <strong>Cancel</strong> button next to the operation</p>
+                <p><span class="step-number">2</span> Confirm the cancellation</p>
+                <p><span class="step-number">3</span> The server will:</p>
+                <ul>
+                    <li>Mark the transaction as cancelled</li>
+                    <li>Roll back any staged changes</li>
+                    <li>Release the server lock</li>
+                    <li>Notify the client</li>
+                </ul>
+                <p><span class="step-number">4</span> The client will:</p>
+                <ul>
+                    <li>Stop the current operation</li>
+                    <li>Roll back local changes</li>
+                    <li>Show "Operation cancelled by administrator" message</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>When to Cancel Operations:</strong>
+                    <ul>
+                        <li>Before server maintenance or restart</li>
+                        <li>If an operation has stalled or is taking too long</li>
+                        <li>If you need to free server resources</li>
+                        <li>Emergency situations</li>
+                    </ul>
+                </div>
+
+                <h3>Operation History</h3>
+
+                <p>The history section shows completed operations:</p>
+
+                <ul>
+                    <li>Timestamp and duration</li>
+                    <li>User and operation type</li>
+                    <li>Success/failure status</li>
+                    <li>File counts (uploaded/downloaded)</li>
+                    <li>Error messages (if failed)</li>
+                </ul>
+
+                <div class="tip-box">
+                    <strong>Monitoring Tips:</strong>
+                    <ul>
+                        <li>Check the operations page regularly to ensure smooth operation</li>
+                        <li>Look for patterns in failed operations</li>
+                        <li>Long-running operations may indicate network issues or very large files</li>
+                        <li>The page auto-refreshes every 30 seconds</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 8: File Management -->
+            <div class="docs-section" id="file-mgmt">
+                <h2>8. File Management</h2>
+
+                <p>Navigate to <strong>Files</strong> tab to manage stored files.</p>
+
+                <h3>Browsing Files</h3>
+
+                <p>Files are organized by service type:</p>
+
+                <ul>
+                    <li>Click <strong>Contemporary</strong> tab to view Contemporary service files</li>
+                    <li>Click <strong>Traditional</strong> tab to view Traditional service files</li>
+                </ul>
+
+                <p>For each file, you can view:</p>
+                <ul>
+                    <li>File path (relative to service folder)</li>
+                    <li>File size</li>
+                    <li>Last modified date and time</li>
+                    <li>SHA-256 hash (for integrity verification)</li>
+                    <li>Number of revisions</li>
+                </ul>
+
+                <h3>File Revisions</h3>
+
+                <p>AlderSync automatically creates revisions when files are updated:</p>
+
+                <ul>
+                    <li>When a file is uploaded that already exists, the old version is preserved</li>
+                    <li>Old versions are renamed: <code>filename.1.ext</code>, <code>filename.2.ext</code>, etc.</li>
+                    <li>The highest revision number is always the current version</li>
+                    <li>Revisions beyond the configured limit are automatically deleted</li>
+                </ul>
+
+                <h3>Viewing Revisions</h3>
+
+                <p><span class="step-number">1</span> Click on a file in the file list</p>
+                <p><span class="step-number">2</span> The revision panel opens showing all versions</p>
+                <p><span class="step-number">3</span> For each revision, you can see:</p>
+                <ul>
+                    <li>Revision number (0 = oldest, higher = newer)</li>
+                    <li>File size</li>
+                    <li>Modified date</li>
+                    <li>Hash</li>
+                </ul>
+
+                <h3>Deleting Files</h3>
+
+                <p>Files can be marked as deleted (soft delete):</p>
+
+                <p><span class="step-number">1</span> Select a file</p>
+                <p><span class="step-number">2</span> Click <strong>Delete</strong></p>
+                <p><span class="step-number">3</span> Confirm deletion</p>
+                <p><span class="step-number">4</span> The file is marked as deleted in the database</p>
+                <p><span class="step-number">5</span> The physical file is preserved (renamed with revision number)</p>
+
+                <div class="info-box">
+                    <strong>Soft Delete:</strong> Deleted files are hidden from users but preserved on disk. This allows recovery if needed. The file is excluded from Pull operations.
+                </div>
+
+                <h3>Deleting Revisions</h3>
+
+                <p>You can delete individual old revisions to free space:</p>
+
+                <p><span class="step-number">1</span> View a file's revisions</p>
+                <p><span class="step-number">2</span> Click <strong>Delete</strong> next to an old revision</p>
+                <p><span class="step-number">3</span> Confirm deletion</p>
+                <p><span class="step-number">4</span> The revision file is permanently deleted</p>
+
+                <div class="warning-box">
+                    <strong>Warning:</strong> Deleting revisions is permanent and cannot be undone. The current version cannot be deleted this way.
+                </div>
+
+                <h3>File Storage on Disk</h3>
+
+                <p>Files are stored in the following structure:</p>
+
+                <div class="file-tree">
+Server/storage/<br>
+├── Contemporary/<br>
+│   ├── Songs/<br>
+│   │   ├── Amazing Grace.pro              (current version)<br>
+│   │   ├── Amazing Grace.1.pro            (revision 1)<br>
+│   │   └── Amazing Grace.2.pro            (revision 2)<br>
+│   └── Presentations/<br>
+│       └── ...<br>
+│<br>
+└── Traditional/<br>
+    ├── Songs/<br>
+    └── Presentations/
+                </div>
+
+                <div class="tip-box">
+                    <strong>Direct File Access:</strong> In Docker deployments with bind mounts, you can directly access files on the host filesystem for inspection or manual backup.
+                </div>
+            </div>
+
+            <!-- Section 9: Server Settings -->
+            <div class="docs-section" id="settings">
+                <h2>9. Server Settings</h2>
+
+                <p>Navigate to <strong>Settings</strong> tab to configure server behavior.</p>
+
+                <h3>Available Settings</h3>
+
+                <table>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Lock Timeout (seconds)</td>
+                        <td>3600</td>
+                        <td>How long a sync operation can run before timing out</td>
+                    </tr>
+                    <tr>
+                        <td>Minimum Lock Timeout</td>
+                        <td>300</td>
+                        <td>Minimum allowed timeout for any operation</td>
+                    </tr>
+                    <tr>
+                        <td>Max Revisions</td>
+                        <td>5</td>
+                        <td>Number of old file versions to keep per file</td>
+                    </tr>
+                    <tr>
+                        <td>JWT Expiration (hours)</td>
+                        <td>24</td>
+                        <td>How long authentication tokens remain valid</td>
+                    </tr>
+                    <tr>
+                        <td>Log Retention (days)</td>
+                        <td>30</td>
+                        <td>How many days to keep old log files</td>
+                    </tr>
+                </table>
+
+                <h3>Lock Timeout Configuration</h3>
+
+                <p>The lock timeout prevents operations from holding the server lock indefinitely:</p>
+
+                <ul>
+                    <li><strong>Dynamic Calculation:</strong> Reconcile operations calculate timeout based on number of files</li>
+                    <li><strong>Minimum:</strong> No operation can have less than the minimum timeout</li>
+                    <li><strong>Manual Override:</strong> Pull/Push use the configured lock timeout</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Recommended Values:</strong>
+                    <ul>
+                        <li>Default timeout: 3600 seconds (1 hour) for large file sets</li>
+                        <li>Minimum timeout: 300 seconds (5 minutes) to prevent premature timeouts</li>
+                        <li>Adjust based on your network speed and typical file sizes</li>
+                    </ul>
+                </div>
+
+                <h3>Revision Management</h3>
+
+                <p>The Max Revisions setting controls disk usage:</p>
+
+                <ul>
+                    <li>Higher value = more revisions = more disk space used</li>
+                    <li>Lower value = fewer revisions = less recovery ability</li>
+                    <li>Recommended: 5-10 revisions for most use cases</li>
+                </ul>
+
+                <h3>JWT Expiration</h3>
+
+                <p>Controls how long users stay logged in:</p>
+
+                <ul>
+                    <li>Shorter = more secure, more frequent re-authentication</li>
+                    <li>Longer = more convenient, less secure</li>
+                    <li>Recommended: 24 hours for desktop clients, 1-2 hours for web</li>
+                </ul>
+
+                <h3>Applying Setting Changes</h3>
+
+                <p><span class="step-number">1</span> Modify the desired settings</p>
+                <p><span class="step-number">2</span> Click <strong>Save Settings</strong></p>
+                <p><span class="step-number">3</span> Most settings take effect immediately</p>
+                <p><span class="step-number">4</span> Some settings (like JWT expiration) affect new sessions/tokens only</p>
+
+                <div class="warning-box">
+                    <strong>Validation:</strong> Settings are validated before saving. Invalid values (e.g., negative numbers, timeout below minimum) will be rejected with an error message.
+                </div>
+            </div>
+
+            <!-- Section 10: Client Downloads -->
+            <div class="docs-section" id="downloads">
+                <h2>10. Client Downloads</h2>
+
+                <p>Navigate to <strong>Downloads</strong> tab to manage client executable downloads.</p>
+
+                <h3>Uploading Client Executables</h3>
+
+                <p><span class="step-number">1</span> Build client executables on development machines (Windows/Mac)</p>
+
+                <p><span class="step-number">2</span> In the Downloads tab, click <strong>Upload Client</strong></p>
+
+                <p><span class="step-number">3</span> Select the platform:</p>
+                <ul>
+                    <li>Windows (.exe)</li>
+                    <li>Mac (.app or .dmg)</li>
+                </ul>
+
+                <p><span class="step-number">4</span> Enter version number (e.g., 1.0.0)</p>
+
+                <p><span class="step-number">5</span> Upload the executable file</p>
+
+                <p><span class="step-number">6</span> Click <strong>Upload</strong></p>
+
+                <h3>Managing Client Versions</h3>
+
+                <p>The Downloads tab shows all available client versions:</p>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Platform</td>
+                        <td>Windows or Mac</td>
+                    </tr>
+                    <tr>
+                        <td>Version</td>
+                        <td>Semantic version number</td>
+                    </tr>
+                    <tr>
+                        <td>File Size</td>
+                        <td>Executable file size</td>
+                    </tr>
+                    <tr>
+                        <td>Uploaded</td>
+                        <td>Upload date and time</td>
+                    </tr>
+                    <tr>
+                        <td>Active</td>
+                        <td>Whether this is the current recommended version</td>
+                    </tr>
+                    <tr>
+                        <td>Actions</td>
+                        <td>Set Active, Delete</td>
+                    </tr>
+                </table>
+
+                <h3>Setting Active Version</h3>
+
+                <p>Users see the "active" version prominently on the downloads page:</p>
+
+                <p><span class="step-number">1</span> Click <strong>Set Active</strong> next to the desired version</p>
+                <p><span class="step-number">2</span> The previous active version is automatically unmarked</p>
+                <p><span class="step-number">3</span> Users will now see this version as the recommended download</p>
+
+                <h3>Deleting Old Versions</h3>
+
+                <p>To remove old client versions:</p>
+
+                <p><span class="step-number">1</span> Click <strong>Delete</strong> next to the version</p>
+                <p><span class="step-number">2</span> Confirm deletion</p>
+                <p><span class="step-number">3</span> The executable file is permanently deleted</p>
+
+                <div class="warning-box">
+                    <strong>Active Versions:</strong> You cannot delete the currently active version. Set a different version as active first.
+                </div>
+
+                <h3>User Download Process</h3>
+
+                <p>When users visit the Downloads page, they see:</p>
+
+                <ul>
+                    <li>List of available platforms</li>
+                    <li>Current active version for each platform</li>
+                    <li>Download button for each version</li>
+                    <li>Installation instructions</li>
+                </ul>
+
+                <div class="tip-box">
+                    <strong>Version Naming:</strong> Use semantic versioning (MAJOR.MINOR.PATCH) for clarity. Example: 1.0.0, 1.1.0, 1.1.1, 2.0.0
+                </div>
+            </div>
+
+            <!-- Section 11: Backup & Recovery -->
+            <div class="docs-section" id="backup">
+                <h2>11. Backup & Recovery</h2>
+
+                <p>Regular backups are essential for disaster recovery.</p>
+
+                <h3>What to Back Up</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Location</th>
+                        <th>Priority</th>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td><code>database/aldersync.db</code></td>
+                        <td>Critical</td>
+                    </tr>
+                    <tr>
+                        <td>Contemporary Files</td>
+                        <td><code>storage/Contemporary/</code></td>
+                        <td>Critical</td>
+                    </tr>
+                    <tr>
+                        <td>Traditional Files</td>
+                        <td><code>storage/Traditional/</code></td>
+                        <td>Critical</td>
+                    </tr>
+                    <tr>
+                        <td>Logs</td>
+                        <td><code>logs/</code></td>
+                        <td>Optional (for troubleshooting)</td>
+                    </tr>
+                    <tr>
+                        <td>Configuration</td>
+                        <td><code>docker-compose.yml</code>, environment variables</td>
+                        <td>Important</td>
+                    </tr>
+                </table>
+
+                <h3>Backup: Native Installation</h3>
+
+                <div class="command-box">
+# Stop the server first (recommended)<br>
+sudo systemctl stop aldersync<br>
+<br>
+# Backup database<br>
+cp /opt/aldersync/Server/database/aldersync.db /backups/aldersync-$(date +%Y%m%d).db<br>
+<br>
+# Backup files<br>
+tar -czf /backups/aldersync-storage-$(date +%Y%m%d).tar.gz /opt/aldersync/Server/storage/<br>
+<br>
+# Restart server<br>
+sudo systemctl start aldersync
+                </div>
+
+                <h3>Backup: Docker Installation</h3>
+
+                <p><strong>Complete Backup (All Data):</strong></p>
+
+                <div class="command-box">
+# Stop the container first<br>
+docker-compose stop<br>
+<br>
+# Backup all data directories (all are bind mounts)<br>
+tar -czf /backups/aldersync-$(date +%Y%m%d).tar.gz \<br>
+  -C /opt/aldersync/Server \<br>
+  database/ storage/ client_downloads/ logs/<br>
+<br>
+# Restart container<br>
+docker-compose start
+                </div>
+
+                <p><strong>Or backup individually:</strong></p>
+
+                <div class="command-box">
+# Database is directly accessible on host filesystem<br>
+cp /opt/aldersync/Server/database/aldersync.db /backups/aldersync-$(date +%Y%m%d).db<br>
+<br>
+# Storage and logs<br>
+tar -czf /backups/aldersync-storage-$(date +%Y%m%d).tar.gz \<br>
+  -C /opt/aldersync/Server \<br>
+  storage/ client_downloads/ logs/
+                </div>
+
+                <h3>Automated Backup Script</h3>
+
+                <p>Create a cron job for automated daily backups:</p>
+
+                <pre># /opt/aldersync/backup.sh
+
+#!/bin/bash
+
+BACKUP_DIR="/backups/aldersync"
+DATE=$(date +%Y%m%d)
+
+mkdir -p $BACKUP_DIR
+
+# Backup database (Docker)
+docker run --rm \
+  -v aldersync_aldersync-app-data:/source \
+  -v $BACKUP_DIR:/backup \
+  alpine cp /source/aldersync.db /backup/db-$DATE.db
+
+# Backup files
+tar -czf $BACKUP_DIR/storage-$DATE.tar.gz /opt/aldersync/storage
+
+# Delete backups older than 30 days
+find $BACKUP_DIR -name "*.db" -mtime +30 -delete
+find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete
+
+echo "Backup completed: $DATE"</pre>
+
+                <p>Add to crontab for daily execution at 2 AM:</p>
+
+                <div class="command-box">
+# Edit crontab<br>
+crontab -e<br>
+<br>
+# Add this line:<br>
+0 2 * * * /opt/aldersync/backup.sh >> /var/log/aldersync-backup.log 2>&1
+                </div>
+
+                <h3>Restoring from Backup</h3>
+
+                <p><strong>Restore Database (Docker):</strong></p>
+
+                <div class="command-box">
+# Stop container<br>
+docker-compose stop<br>
+<br>
+# Restore database to volume<br>
+docker run --rm \<br>
+  -v aldersync_aldersync-app-data:/target \<br>
+  -v /backups:/backup \<br>
+  alpine cp /backup/aldersync-20251113.db /target/aldersync.db<br>
+<br>
+# Start container<br>
+docker-compose start
+                </div>
+
+                <p><strong>Restore Files:</strong></p>
+
+                <div class="command-box">
+# Extract backup<br>
+tar -xzf /backups/aldersync-storage-20251113.tar.gz -C /opt/aldersync/
+                </div>
+
+                <div class="danger-box">
+                    <strong>Before Restoring:</strong>
+                    <ul>
+                        <li>Stop the AlderSync server/container</li>
+                        <li>Back up current data before overwriting</li>
+                        <li>Verify backup integrity</li>
+                        <li>Test restore on a separate system if possible</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 12: Updating AlderSync -->
+            <div class="docs-section" id="updates">
+                <h2>12. Updating AlderSync</h2>
+
+                <p>Keep AlderSync up to date for bug fixes, security patches, and new features.</p>
+
+                <h3>Update Process: Docker (Portainer)</h3>
+
+                <p>AlderSync includes an automated update script for Docker deployments.</p>
+
+                <p><strong>On Your Development Machine:</strong></p>
+
+                <p><span class="step-number">1</span> Navigate to the Server directory</p>
+
+                <div class="command-box">
+cd /path/to/AlderSync/Server
+                </div>
+
+                <p><span class="step-number">2</span> Run the update script to build and export new image</p>
+
+                <div class="command-box">
+python update_docker_deployment.py --export --version 1.1.0
+                </div>
+
+                <p><span class="step-number">3</span> This creates: <code>portainer-deployment/aldersync-server-image-1.1.0.tar</code></p>
+
+                <p><strong>On Your NAS/Server (Portainer):</strong></p>
+
+                <p><span class="step-number">4</span> Upload the new .tar file to your NAS</p>
+
+                <p><span class="step-number">5</span> In Portainer:</p>
+                <ul>
+                    <li>Go to <strong>Images</strong></li>
+                    <li>Delete the old <code>server-aldersync-server:latest</code> image (optional but recommended)</li>
+                    <li>Click <strong>Import</strong></li>
+                    <li>Upload the new .tar file</li>
+                </ul>
+
+                <p><span class="step-number">6</span> Go to <strong>Stacks</strong></p>
+
+                <p><span class="step-number">7</span> Select your AlderSync stack</p>
+
+                <p><span class="step-number">8</span> Click <strong>Update the stack</strong></p>
+
+                <p><span class="step-number">9</span> Choose <strong>Redeploy</strong></p>
+
+                <p><span class="step-number">10</span> Wait for container to restart with new image</p>
+
+                <p><span class="step-number">11</span> Verify health check passes</p>
+
+                <div class="info-box">
+                    <strong>Data Persistence:</strong> Your database and files are stored in Docker volumes and bind mounts, so they persist through updates. No data is lost when updating the container.
+                </div>
+
+                <h3>Update Process: Native Installation</h3>
+
+                <p><span class="step-number">1</span> Stop the server</p>
+
+                <div class="command-box">
+sudo systemctl stop aldersync
+                </div>
+
+                <p><span class="step-number">2</span> Back up current installation</p>
+
+                <div class="command-box">
+cp /opt/aldersync/Server/aldersync.db /backups/aldersync-pre-update.db
+                </div>
+
+                <p><span class="step-number">3</span> Pull latest code or copy new Server directory</p>
+
+                <div class="command-box">
+cd /opt/aldersync<br>
+git pull origin master
+                </div>
+
+                <p><span class="step-number">4</span> Update dependencies</p>
+
+                <div class="command-box">
+source venv/bin/activate<br>
+pip install -r Server/requirements.txt --upgrade
+                </div>
+
+                <p><span class="step-number">5</span> Run any database migrations (if provided)</p>
+
+                <p><span class="step-number">6</span> Start the server</p>
+
+                <div class="command-box">
+sudo systemctl start aldersync
+                </div>
+
+                <p><span class="step-number">7</span> Check status and logs</p>
+
+                <div class="command-box">
+sudo systemctl status aldersync<br>
+tail -f /opt/aldersync/Server/logs/aldersync-server-*.log
+                </div>
+
+                <h3>Rollback Procedure</h3>
+
+                <p>If an update causes issues, roll back:</p>
+
+                <p><strong>Docker:</strong></p>
+
+                <p><span class="step-number">1</span> In Portainer, go to <strong>Images</strong></p>
+                <p><span class="step-number">2</span> Find the previous version (if not deleted)</p>
+                <p><span class="step-number">3</span> Update stack to use previous image tag</p>
+                <p><span class="step-number">4</span> Redeploy</p>
+
+                <p><strong>Native:</strong></p>
+
+                <p><span class="step-number">1</span> Stop server</p>
+                <p><span class="step-number">2</span> Restore previous code version</p>
+                <p><span class="step-number">3</span> Restore database from backup</p>
+                <p><span class="step-number">4</span> Start server</p>
+
+                <div class="tip-box">
+                    <strong>Best Practices:</strong>
+                    <ul>
+                        <li>Always back up before updating</li>
+                        <li>Test updates on a development/staging server first</li>
+                        <li>Keep at least one previous Docker image for rollback</li>
+                        <li>Schedule updates during low-usage periods</li>
+                        <li>Notify users of planned downtime</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 13: Monitoring & Logs -->
+            <div class="docs-section" id="monitoring">
+                <h2>13. Monitoring & Logs</h2>
+
+                <h3>Health Check Endpoint</h3>
+
+                <p>AlderSync provides a health check endpoint at <code>/health</code>:</p>
+
+                <div class="command-box">
+curl http://your-server:8000/health
+                </div>
+
+                <p>Response:</p>
+
+                <pre>{
+  "status": "healthy",
+  "database": "connected",
+  "storage": "accessible",
+  "uptime_seconds": 3600
+}</pre>
+
+                <p>Use this endpoint for:</p>
+                <ul>
+                    <li>Docker health checks</li>
+                    <li>External monitoring tools (Nagios, Prometheus, etc.)</li>
+                    <li>Load balancer health probes</li>
+                </ul>
+
+                <h3>Log Files</h3>
+
+                <p>AlderSync writes logs to:</p>
+
+                <ul>
+                    <li><strong>Location:</strong> <code>logs/aldersync-server-YYYY-MM-DD.log</code></li>
+                    <li><strong>Format:</strong> Timestamp, logger name, level, message</li>
+                    <li><strong>Rotation:</strong> 10 MB per file, 10 backup files</li>
+                    <li><strong>Retention:</strong> Controlled by log_retention_days setting</li>
+                </ul>
+
+                <p><strong>Viewing Logs (Docker):</strong></p>
+
+                <div class="command-box">
+# Container logs<br>
+docker-compose logs aldersync-server<br>
+<br>
+# Follow logs in real-time<br>
+docker-compose logs -f aldersync-server<br>
+<br>
+# Log files (if bind-mounted)<br>
+tail -f /path/to/aldersync/logs/aldersync-server-*.log
+                </div>
+
+                <p><strong>Viewing Logs (Native):</strong></p>
+
+                <div class="command-box">
+# Application logs<br>
+tail -f /opt/aldersync/Server/logs/aldersync-server-*.log<br>
+<br>
+# Systemd logs<br>
+journalctl -u aldersync -f
+                </div>
+
+                <h3>What to Monitor</h3>
+
+                <table>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Normal</th>
+                        <th>Investigate If...</th>
+                    </tr>
+                    <tr>
+                        <td>Health Check</td>
+                        <td>Returns 200 OK</td>
+                        <td>Returns error or doesn't respond</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Space</td>
+                        <td>Ample free space</td>
+                        <td>Less than 10% free</td>
+                    </tr>
+                    <tr>
+                        <td>Active Operations</td>
+                        <td>0-3 concurrent</td>
+                        <td>Stuck operations, long durations</td>
+                    </tr>
+                    <tr>
+                        <td>Failed Operations</td>
+                        <td>Occasional failures OK</td>
+                        <td>High failure rate (>10%)</td>
+                    </tr>
+                    <tr>
+                        <td>Log Errors</td>
+                        <td>Few or none</td>
+                        <td>Frequent ERROR or CRITICAL messages</td>
+                    </tr>
+                    <tr>
+                        <td>Database Size</td>
+                        <td>Gradual growth</td>
+                        <td>Sudden large increase</td>
+                    </tr>
+                </table>
+
+                <h3>Log Analysis</h3>
+
+                <p>Common log patterns to look for:</p>
+
+                <div class="command-box">
+# Find errors<br>
+grep "ERROR" logs/aldersync-server-*.log<br>
+<br>
+# Find failed operations<br>
+grep "Operation failed" logs/aldersync-server-*.log<br>
+<br>
+# Count operations by type<br>
+grep "Operation started" logs/aldersync-server-*.log | cut -d' ' -f5 | sort | uniq -c
+                </div>
+
+                <div class="tip-box">
+                    <strong>Monitoring Best Practices:</strong>
+                    <ul>
+                        <li>Set up automated health check monitoring</li>
+                        <li>Configure disk space alerts</li>
+                        <li>Review logs weekly for patterns</li>
+                        <li>Monitor operation history for failures</li>
+                        <li>Keep an eye on storage growth rate</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 14: Troubleshooting -->
+            <div class="docs-section" id="troubleshooting">
+                <h2>14. Troubleshooting</h2>
+
+                <h3>Server Won't Start</h3>
+
+                <p><strong>Symptoms:</strong> Container/service fails to start or exits immediately</p>
+
+                <p><strong>Diagnosis:</strong></p>
+                <div class="command-box">
+# Check Docker logs<br>
+docker-compose logs aldersync-server<br>
+<br>
+# Or systemd logs<br>
+journalctl -u aldersync -n 100
+                </div>
+
+                <p><strong>Common Causes:</strong></p>
+                <ul>
+                    <li><strong>Port 8000 already in use:</strong> Check with <code>netstat -tuln | grep 8000</code>, change port in docker-compose.yml</li>
+                    <li><strong>Database corruption:</strong> Restore from backup</li>
+                    <li><strong>Permission issues:</strong> Check file ownership and permissions</li>
+                    <li><strong>Missing dependencies:</strong> Rebuild Docker image or reinstall pip packages</li>
+                </ul>
+
+                <h3>Cannot Access Admin Interface</h3>
+
+                <p><strong>Symptoms:</strong> Browser can't reach http://server:8000/admin</p>
+
+                <p><strong>Diagnosis Steps:</strong></p>
+
+                <p><span class="step-number">1</span> Check if server is running</p>
+                <div class="command-box">
+docker ps | grep aldersync<br>
+# or<br>
+systemctl status aldersync
+                </div>
+
+                <p><span class="step-number">2</span> Check health endpoint from server itself</p>
+                <div class="command-box">
+curl http://localhost:8000/health
+                </div>
+
+                <p><span class="step-number">3</span> Check firewall rules</p>
+                <div class="command-box">
+# Linux firewall<br>
+sudo ufw status<br>
+sudo ufw allow 8000/tcp<br>
+<br>
+# Check if port is accessible from client<br>
+telnet server-ip 8000
+                </div>
+
+                <p><span class="step-number">4</span> Check Docker port mapping</p>
+                <div class="command-box">
+docker port aldersync-server
+                </div>
+
+                <h3>Operations Timing Out</h3>
+
+                <p><strong>Symptoms:</strong> Sync operations fail with timeout errors</p>
+
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li><strong>Increase timeout:</strong> Go to Settings, increase Lock Timeout value</li>
+                    <li><strong>Check network:</strong> Verify network stability between client and server</li>
+                    <li><strong>Check disk I/O:</strong> Slow disk can cause timeouts, check with <code>iostat</code></li>
+                    <li><strong>Reduce file size:</strong> Very large files may need special handling</li>
+                </ul>
+
+                <h3>Database Locked Errors</h3>
+
+                <p><strong>Symptoms:</strong> "Database is locked" errors in logs</p>
+
+                <p><strong>Causes:</strong></p>
+                <ul>
+                    <li>Multiple processes accessing the database</li>
+                    <li>Long-running transactions</li>
+                    <li>NFS/network filesystem issues (if database on network storage)</li>
+                </ul>
+
+                <p><strong>Solutions:</strong></p>
+                <div class="command-box">
+# Restart the server to clear locks<br>
+docker-compose restart<br>
+<br>
+# Check for zombie processes<br>
+ps aux | grep python<br>
+<br>
+# Ensure database is on local storage (not NFS)
+                </div>
+
+                <h3>High Disk Usage</h3>
+
+                <p><strong>Symptoms:</strong> Storage filling up quickly</p>
+
+                <p><strong>Diagnosis:</strong></p>
+                <div class="command-box">
+# Check storage directory size<br>
+du -sh /path/to/aldersync/storage/*<br>
+<br>
+# Find largest files<br>
+find /path/to/aldersync/storage -type f -exec du -h {} + | sort -rh | head -20
+                </div>
+
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li><strong>Reduce max_revisions:</strong> Lower the number of kept revisions in Settings</li>
+                    <li><strong>Delete old revisions:</strong> Use Files tab to manually delete unnecessary old revisions</li>
+                    <li><strong>Clean up deleted files:</strong> Permanently remove files marked as deleted</li>
+                    <li><strong>Archive old files:</strong> Move older presentations to archive storage</li>
+                </ul>
+
+                <h3>Client Can't Connect</h3>
+
+                <p><strong>From admin perspective:</strong></p>
+
+                <p><span class="step-number">1</span> Check server is accessible</p>
+                <div class="command-box">
+curl http://server-ip:8000/health
+                </div>
+
+                <p><span class="step-number">2</span> Check user account status</p>
+                <ul>
+                    <li>Go to Users tab</li>
+                    <li>Find the user</li>
+                    <li>Check if account is Active (not Disabled)</li>
+                </ul>
+
+                <p><span class="step-number">3</span> Check network connectivity</p>
+                <ul>
+                    <li>Ensure server is reachable from client network</li>
+                    <li>Check for VPN requirements</li>
+                    <li>Verify DNS resolution</li>
+                </ul>
+
+                <p><span class="step-number">4</span> Review server logs for authentication failures</p>
+                <div class="command-box">
+grep "authentication failed" logs/aldersync-server-*.log
+                </div>
+
+                <h3>Forgotten Admin Password</h3>
+
+                <p><strong>Solution:</strong> Reset the admin password via database</p>
+
+                <p><span class="step-number">1</span> Stop the server</p>
+
+                <p><span class="step-number">2</span> Access the database directly</p>
+                <div class="command-box">
+# Native installation<br>
+sqlite3 /opt/aldersync/Server/aldersync.db<br>
+<br>
+# Docker installation<br>
+docker exec -it aldersync-server sqlite3 /app/aldersync.db
+                </div>
+
+                <p><span class="step-number">3</span> Generate a new password hash (use Python)</p>
+                <div class="command-box">
+python3 -c "from passlib.hash import bcrypt; print(bcrypt.hash('YourNewPassword'))"
+                </div>
+
+                <p><span class="step-number">4</span> Update the database</p>
+                <div class="command-box">
+sqlite> UPDATE users SET password_hash='$2b$12$...' WHERE username='admin';<br>
+sqlite> .quit
+                </div>
+
+                <p><span class="step-number">5</span> Restart the server</p>
+
+                <div class="danger-box">
+                    <strong>Security Warning:</strong> This procedure requires direct database access. Protect your database file and only perform this in emergencies.
+                </div>
+
+                <h3>Getting Additional Help</h3>
+
+                <p>If you can't resolve an issue:</p>
+
+                <ul>
+                    <li>Check the <a href="/admin/docs/technical">Technical Documentation</a> for architecture details</li>
+                    <li>Review server logs thoroughly</li>
+                    <li>Collect relevant information:
+                        <ul>
+                            <li>Error messages (exact text)</li>
+                            <li>Log excerpts</li>
+                            <li>Screenshots of error dialogs</li>
+                            <li>Steps to reproduce</li>
+                        </ul>
+                    </li>
+                    <li>Check Docker/Portainer logs if using containers</li>
+                    <li>Consult the source code in <code>Server/</code> directory</li>
+                </ul>
+            </div>
+
+            <hr style="margin: 40px 0;">
+
+            <div class="info-box">
+                <strong>Additional Resources:</strong>
+                <ul>
+                    <li><a href="/admin/docs/user">User Documentation</a> - For end users using the Client</li>
+                    <li><a href="/admin/docs/technical">Technical Documentation</a> - For developers and technical modifications</li>
+                    <li><strong>Local Files:</strong>
+                        <ul>
+                            <li><code>Server/DOCKER.md</code> - Complete Docker deployment guide</li>
+                            <li><code>Server/portainer-deployment/PORTAINER-README.md</code> - Portainer-specific instructions</li>
+                            <li><code>CLAUDE.md</code> - Instructions for Claude Code development</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

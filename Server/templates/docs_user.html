@@ -1,0 +1,837 @@
+{% extends "base.html" %}
+
+{% block title %}User Documentation - AlderSync{% endblock %}
+
+{% block extra_head %}
+<style>
+    .docs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: var(--card-bg);
+    }
+
+    .docs-nav {
+        background: var(--bg-color);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        position: sticky;
+        top: 20px;
+    }
+
+    .docs-nav h3 {
+        margin-top: 0;
+        color: var(--text-color);
+    }
+
+    .docs-nav ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .docs-nav li {
+        margin: 8px 0;
+    }
+
+    .docs-nav a {
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 5px 10px;
+        display: block;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .docs-nav a:visited {
+        color: var(--primary-color);
+    }
+
+    .docs-nav a:hover {
+        background: var(--card-bg);
+    }
+
+    .docs-content {
+        line-height: 1.6;
+    }
+
+    .docs-content a {
+        color: var(--primary-color);
+    }
+
+    .docs-content a:visited {
+        color: var(--primary-color);
+        opacity: 0.8;
+    }
+
+    .docs-section {
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .docs-section h2 {
+        color: var(--text-color);
+        margin-top: 0;
+        padding-top: 20px;
+    }
+
+    .docs-section h3 {
+        color: var(--text-color);
+        margin-top: 25px;
+    }
+
+    .screenshot {
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        background: var(--bg-color);
+    }
+
+    .screenshot-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: var(--text-color);
+    }
+
+    .diagram {
+        background: var(--card-bg);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        font-family: 'Courier New', monospace;
+        text-align: center;
+    }
+
+    .flow-diagram {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    .flow-box {
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 15px 25px;
+        background: rgba(37, 99, 235, 0.15);
+        font-weight: bold;
+    }
+
+    .flow-arrow {
+        font-size: 24px;
+        color: var(--primary-color);
+    }
+
+    .gui-mockup {
+        border: 3px solid var(--border-color);
+        border-radius: 10px;
+        padding: 10px;
+        background: var(--bg-color);
+        margin: 20px 0;
+    }
+
+    .gui-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 8px;
+        border-radius: 5px 5px 0 0;
+        font-weight: bold;
+    }
+
+    .gui-body {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 0 0 5px 5px;
+    }
+
+    .gui-button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 5px;
+        font-weight: bold;
+        border: none;
+    }
+
+    .gui-button.disabled {
+        background: var(--bg-color);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .gui-service-indicator {
+        background: var(--success-color);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .warning-box {
+        background: rgba(245, 158, 11, 0.15);
+        border-left: 4px solid var(--warning-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .info-box {
+        background: rgba(37, 99, 235, 0.15);
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .tip-box {
+        background: rgba(16, 185, 129, 0.15);
+        border-left: 4px solid var(--success-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .folder-structure {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        margin: 15px 0;
+    }
+
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    code {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        border: 1px solid var(--border-color);
+    }
+
+    pre {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        border: 1px solid var(--border-color);
+    }
+
+    .indicator-arrow {
+        color: var(--danger-color);
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+    }
+
+    table th, table td {
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        text-align: left;
+    }
+
+    table th {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    table td {
+        color: var(--text-color);
+    }
+
+    table tr:nth-child(even) {
+        background: var(--bg-color);
+    }
+
+    table tr:nth-child(odd) {
+        background: var(--card-bg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <h1>AlderSync User Documentation</h1>
+    <p>Welcome to AlderSync! This guide will help you understand and use the AlderSync Client to synchronize ProPresenter files between your computer and the church server.</p>
+
+    <div style="display: grid; grid-template-columns: 250px 1fr; gap: 30px;">
+        <div class="docs-nav">
+            <h3>Contents</h3>
+            <ul>
+                <li><a href="#intro">1. Introduction</a></li>
+                <li><a href="#install">2. Installation</a></li>
+                <li><a href="#first-time">3. First-Time Setup</a></li>
+                <li><a href="#understanding">4. Understanding Services</a></li>
+                <li><a href="#pull">5. Pull Operation</a></li>
+                <li><a href="#push">6. Push Operation</a></li>
+                <li><a href="#reconcile">7. Reconcile Operation</a></li>
+                <li><a href="#swap">8. Swap Operation</a></li>
+                <li><a href="#settings">9. Settings</a></li>
+                <li><a href="#revisions">10. Revision History</a></li>
+                <li><a href="#troubleshooting">11. Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <div class="docs-content">
+            <!-- Section 1: Introduction -->
+            <div class="docs-section" id="intro">
+                <h2>1. Introduction</h2>
+                <p>AlderSync is a file synchronization system designed specifically for church volunteers who work with ProPresenter files. It allows you to:</p>
+                <ul>
+                    <li>Download the latest files from the church server (Pull)</li>
+                    <li>Upload your changes back to the server (Push)</li>
+                    <li>Synchronize changes in both directions (Reconcile)</li>
+                    <li>Switch between Contemporary and Traditional service files (Swap)</li>
+                </ul>
+
+                <div class="diagram">
+                    <strong>AlderSync Workflow</strong><br><br>
+                    <div class="flow-diagram">
+                        <div class="flow-box">Your Computer</div>
+                        <div class="flow-arrow">↔</div>
+                        <div class="flow-box">AlderSync Server</div>
+                        <div class="flow-arrow">↔</div>
+                        <div class="flow-box">Other Volunteers</div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>Note:</strong> AlderSync works with the ProPresenter folder in your Documents directory. Make sure ProPresenter is installed before using AlderSync.
+                </div>
+            </div>
+
+            <!-- Section 2: Installation -->
+            <div class="docs-section" id="install">
+                <h2>2. Installation</h2>
+
+                <h3>Downloading the Client</h3>
+                <p><span class="step-number">1</span> Navigate to the <a href="/admin/downloads">Downloads</a> page on this website.</p>
+                <p><span class="step-number">2</span> Download the appropriate version for your operating system:</p>
+                <ul>
+                    <li><strong>Windows:</strong> Download the <code>.exe</code> file</li>
+                    <li><strong>Mac:</strong> Download the <code>.app</code> file</li>
+                </ul>
+
+                <h3>Installing on Windows</h3>
+                <p><span class="step-number">1</span> Download <code>aldersync.exe</code> to your computer</p>
+                <p><span class="step-number">2</span> Move the file to a permanent location (e.g., <code>C:\Program Files\AlderSync\</code>)</p>
+                <p><span class="step-number">3</span> Double-click to run the application</p>
+                <p><span class="step-number">4</span> If Windows shows a security warning, click "More info" → "Run anyway"</p>
+
+                <h3>Installing on Mac</h3>
+                <p><span class="step-number">1</span> Download <code>aldersync.app</code> to your Downloads folder</p>
+                <p><span class="step-number">2</span> Drag the app to your Applications folder</p>
+                <p><span class="step-number">3</span> Double-click to run</p>
+                <p><span class="step-number">4</span> If macOS blocks it, go to System Preferences → Security & Privacy → click "Open Anyway"</p>
+
+                <div class="tip-box">
+                    <strong>Tip:</strong> Create a desktop shortcut for easy access. On Windows, right-click the .exe and select "Create shortcut". On Mac, drag the app from Applications to your desktop while holding ⌘+Option.
+                </div>
+            </div>
+
+            <!-- Section 3: First-Time Setup -->
+            <div class="docs-section" id="first-time">
+                <h2>3. First-Time Setup</h2>
+
+                <p>When you run AlderSync for the first time, you'll need to configure your connection to the server.</p>
+
+                <div class="screenshot">
+                    <div class="screenshot-title">AlderSync First Time Setup Window</div>
+                    <img src="/static/images/first_time_setup.png" alt="AlderSync First Time Setup" style="max-width: 100%; border: 1px solid #ddd;">
+                </div>
+
+                <p><span class="step-number">1</span> <strong>Server URL:</strong> Enter <code>http://{{ server_host }}</code> (the same address you're viewing this page from)</p>
+                <p><span class="step-number">2</span> <strong>Server Port:</strong> Enter <code>{{ server_port }}</code></p>
+                <p><span class="step-number">3</span> <strong>Username:</strong> Your assigned username</p>
+                <p><span class="step-number">4</span> <strong>Password:</strong> Your assigned password (you can change this later)</p>
+                <p><span class="step-number">5</span> Click <strong>Connect</strong></p>
+
+                <div class="info-box">
+                    <strong>Security Note:</strong> Your password is stored securely in your operating system's credential manager (Windows Credential Manager or Mac Keychain). It is never stored in plain text.
+                </div>
+
+                <p>Once connected successfully, you'll see the main AlderSync window:</p>
+
+                <div class="screenshot">
+                    <div class="screenshot-title">AlderSync Main Window</div>
+                    <img src="/static/images/main_window.png" alt="AlderSync Main Window" style="max-width: 100%; border: 1px solid #ddd;">
+                </div>
+            </div>
+
+            <!-- Section 4: Understanding Services -->
+            <div class="docs-section" id="understanding">
+                <h2>4. Understanding Services</h2>
+
+                <p>AlderSync manages two separate sets of ProPresenter files:</p>
+                <ul>
+                    <li><strong>Contemporary Service</strong> - Files for the contemporary worship service</li>
+                    <li><strong>Traditional Service</strong> - Files for the traditional worship service</li>
+                </ul>
+
+                <p>Only one service is "active" at a time. The active service is the one in your ProPresenter folder.</p>
+
+                <h3>How Folder Swapping Works</h3>
+
+                <div class="folder-structure">
+Documents/
+├── ProPresenter/                     <span class="indicator-arrow">← Currently Active (Contemporary)</span>
+│   ├── Songs/
+│   ├── Presentations/
+│   └── ...
+│
+└── ProPresenter - Traditional/       <span class="indicator-arrow">← Inactive (Traditional)</span>
+    ├── Songs/
+    ├── Presentations/
+    └── ...
+                </div>
+
+                <p>When you <strong>Swap</strong> to Traditional service, AlderSync renames the folders:</p>
+
+                <div class="folder-structure">
+Documents/
+├── ProPresenter - Contemporary/      <span class="indicator-arrow">← Now Inactive</span>
+│   └── ...
+│
+└── ProPresenter/                     <span class="indicator-arrow">← Now Active (Traditional)</span>
+    └── ...
+                </div>
+
+                <div class="warning-box">
+                    <strong>Important:</strong> ProPresenter must be closed before swapping services. AlderSync will check and warn you if ProPresenter is running.
+                </div>
+
+                <p>The <strong>Service Indicator</strong> at the top of the AlderSync window always shows which service is currently active.</p>
+            </div>
+
+            <!-- Section 5: Pull Operation -->
+            <div class="docs-section" id="pull">
+                <h2>5. Pull Operation</h2>
+
+                <p>The <strong>Pull</strong> operation downloads the latest files from the server to your computer, replacing your local files with the server versions.</p>
+
+                <h3>When to Use Pull</h3>
+                <ul>
+                    <li>At the start of your work session</li>
+                    <li>To get files created by other volunteers</li>
+                    <li>To sync before making your own changes</li>
+                    <li>To restore files to the server version</li>
+                </ul>
+
+                <h3>How Pull Works</h3>
+
+                <div class="diagram">
+                    <strong>Pull Operation Flow</strong><br><br>
+                    <div class="flow-diagram">
+                        <div class="flow-box">Server Files</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box">Download</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box">Replace Local</div>
+                    </div>
+                </div>
+
+                <h3>Performing a Pull</h3>
+
+                <p><span class="step-number">1</span> Ensure you're on the correct service (check the Service Indicator)</p>
+                <p><span class="step-number">2</span> Click the <strong>Pull</strong> button</p>
+                <p><span class="step-number">3</span> AlderSync will show progress in the status area</p>
+                <p><span class="step-number">4</span> When complete, you'll see: "Pull completed: X files downloaded"</p>
+
+                <div class="warning-box">
+                    <strong>Warning:</strong> Pull will overwrite any local changes you've made. If you have unpublished changes, use <strong>Push</strong> or <strong>Reconcile</strong> instead.
+                </div>
+
+                <div class="tip-box">
+                    <strong>Tip:</strong> If Pull is taking too long or you need to stop it, click the <strong>Cancel</strong> button. AlderSync will roll back any partial changes to keep your files in a consistent state.
+                </div>
+            </div>
+
+            <!-- Section 6: Push Operation -->
+            <div class="docs-section" id="push">
+                <h2>6. Push Operation</h2>
+
+                <p>The <strong>Push</strong> operation uploads your local files to the server, making them available to other volunteers.</p>
+
+                <h3>When to Use Push</h3>
+                <ul>
+                    <li>After making changes to presentations or songs</li>
+                    <li>After adding new files</li>
+                    <li>To share your work with other volunteers</li>
+                </ul>
+
+                <h3>How Push Works</h3>
+
+                <div class="diagram">
+                    <strong>Push Operation Flow</strong><br><br>
+                    <div class="flow-diagram">
+                        <div class="flow-box">Local Files</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box">Upload</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box">Server Storage</div>
+                    </div>
+                </div>
+
+                <h3>Performing a Push</h3>
+
+                <p><span class="step-number">1</span> Make your changes in ProPresenter and save</p>
+                <p><span class="step-number">2</span> Close ProPresenter (recommended)</p>
+                <p><span class="step-number">3</span> In AlderSync, click the <strong>Push</strong> button</p>
+                <p><span class="step-number">4</span> If "Confirm before push" is enabled in Settings, confirm your action</p>
+                <p><span class="step-number">5</span> Watch the progress in the status area</p>
+                <p><span class="step-number">6</span> When complete: "Push completed: X files uploaded"</p>
+
+                <div class="info-box">
+                    <strong>File Versioning:</strong> When you push files, the server automatically keeps backup versions of replaced files. These can be viewed and restored through the <a href="#revisions">Revision History</a> feature.
+                </div>
+
+                <div class="tip-box">
+                    <strong>Best Practice:</strong> Do a <strong>Pull</strong> before making changes, then <strong>Push</strong> when done. This minimizes conflicts with other volunteers' work.
+                </div>
+            </div>
+
+            <!-- Section 7: Reconcile Operation -->
+            <div class="docs-section" id="reconcile">
+                <h2>7. Reconcile Operation</h2>
+
+                <p>The <strong>Reconcile</strong> operation synchronizes files in both directions - it downloads newer server files and uploads newer local files in a single operation.</p>
+
+                <h3>When to Use Reconcile</h3>
+                <ul>
+                    <li>When both you and others have made changes</li>
+                    <li>For a comprehensive sync in both directions</li>
+                    <li>When you're not sure who has the latest version</li>
+                </ul>
+
+                <h3>How Reconcile Works</h3>
+
+                <div class="diagram">
+                    <strong>Reconcile Operation Flow</strong><br><br>
+                    <div class="flow-diagram">
+                        <div class="flow-box">Local Files</div>
+                        <div class="flow-arrow">↔</div>
+                        <div class="flow-box">Compare</div>
+                        <div class="flow-arrow">↔</div>
+                        <div class="flow-box">Server Files</div>
+                    </div>
+                    <br>
+                    <div class="flow-diagram">
+                        <div class="flow-box">Download Newer</div>
+                        <div class="flow-arrow">+</div>
+                        <div class="flow-box">Upload Newer</div>
+                    </div>
+                </div>
+
+                <h3>Performing a Reconcile</h3>
+
+                <p><span class="step-number">1</span> Click the <strong>Reconcile</strong> button</p>
+                <p><span class="step-number">2</span> AlderSync compares all files by modification time and size</p>
+                <p><span class="step-number">3</span> If conflicts are detected (same file modified in both places), behavior depends on your <strong>Conflict Resolution Mode</strong> setting:</p>
+
+                <p><span class="step-number">3</span> Click <strong>Proceed</strong> to apply your choices</p>
+                <p><span class="step-number">4</span> AlderSync completes the synchronization</p>
+
+                <div class="warning-box">
+                    <strong>Important:</strong> Reconcile is all-or-nothing. If you cancel or if an error occurs, ALL changes (both uploads and downloads) are rolled back.
+                </div>
+            </div>
+
+            <!-- Section 8: Swap Operation -->
+            <div class="docs-section" id="swap">
+                <h2>8. Swap Operation</h2>
+
+                <p>The <strong>Swap</strong> operation switches between Contemporary and Traditional service files by renaming folders.</p>
+
+                <h3>When to Use Swap</h3>
+                <ul>
+                    <li>When switching from Contemporary to Traditional service</li>
+                    <li>When switching from Traditional to Contemporary service</li>
+                </ul>
+
+                <h3>Swap Process</h3>
+
+                <div class="diagram">
+                    <strong>Before Swap (Contemporary Active)</strong><br><br>
+                    ProPresenter/ ← Active<br>
+                    ProPresenter - Traditional/ ← Inactive<br><br>
+                    <div class="flow-arrow">⬇ Click "Swap to Traditional" ⬇</div><br><br>
+                    <strong>After Swap (Traditional Active)</strong><br><br>
+                    ProPresenter - Contemporary/ ← Inactive<br>
+                    ProPresenter/ ← Active
+                </div>
+
+                <h3>Performing a Swap</h3>
+
+                <p><span class="step-number">1</span> <strong>Close ProPresenter</strong> (required)</p>
+                <p><span class="step-number">2</span> Click the <strong>Swap to [Other Service]</strong> button</p>
+                <p><span class="step-number">3</span> AlderSync checks if ProPresenter is running</p>
+                <p><span class="step-number">4</span> If ProPresenter is running, you'll be prompted to close it</p>
+                <p><span class="step-number">5</span> Folders are renamed instantly</p>
+                <p><span class="step-number">6</span> The Service Indicator updates to show the new active service</p>
+                <p><span class="step-number">7</span> You can now open ProPresenter to work with the swapped service</p>
+
+                <div class="tip-box">
+                    <strong>Tip:</strong> You can quickly swap services by clicking on the Service Indicator at the top of the window.
+                </div>
+
+                <div class="info-box">
+                    <strong>Automatic Folder Creation:</strong> If the alternate service folder doesn't exist, AlderSync will create it automatically when you swap. The first time you swap to a new service, the folder will be empty until you Pull files from the server.
+                </div>
+            </div>
+
+            <!-- Section 9: Settings -->
+            <div class="docs-section" id="settings">
+                <h2>9. Settings</h2>
+
+                <p>Access Settings from the menu bar or by clicking the gear icon. Settings are organized into tabs:</p>
+
+                <h3>Connection Tab</h3>
+                <table>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Server URL</td>
+                        <td>Address of the AlderSync server</td>
+                    </tr>
+                    <tr>
+                        <td>Server Port</td>
+                        <td>Port number ({{ server_port }} for this server)</td>
+                    </tr>
+                    <tr>
+                        <td>Verify SSL</td>
+                        <td>Enable SSL certificate verification (recommended for security)</td>
+                    </tr>
+                </table>
+
+                <h3>Service Tab</h3>
+                <table>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Default Service</td>
+                        <td>Which service to default to on startup (Contemporary or Traditional)</td>
+                    </tr>
+                </table>
+
+                <h3>Paths Tab</h3>
+                <table>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Documents Folder</td>
+                        <td>Custom path to Documents folder (auto-detected by default)</td>
+                    </tr>
+                </table>
+
+                <h3>Logging Tab</h3>
+                <table>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Log Level</td>
+                        <td>Detail level for logs (INFO, DEBUG, WARNING, ERROR)</td>
+                    </tr>
+                    <tr>
+                        <td>Log Retention Days</td>
+                        <td>How many days to keep old log files</td>
+                    </tr>
+                    <tr>
+                        <td>Show Log on Startup</td>
+                        <td>Automatically open log panel when AlderSync starts</td>
+                    </tr>
+                </table>
+
+                <h3>Behavior Tab</h3>
+                <table>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Confirm Before Push</td>
+                        <td>Show confirmation dialog before uploading files</td>
+                    </tr>
+                    <tr>
+                        <td>Conflict Resolution Mode</td>
+                        <td>How to handle conflicts during Reconcile operations:<br>
+                            <strong>auto</strong> - Always use most recent version (no dialog)<br>
+                            <strong>manual</strong> - Always show conflict resolution dialog<br>
+                            <strong>ask</strong> - Prompt whether to use auto or manual (default)</td>
+                    </tr>
+                </table>
+
+                <h3>Change Password</h3>
+                <p>To change your password:</p>
+                <p><span class="step-number">1</span> Open Settings</p>
+                <p><span class="step-number">2</span> Go to the Account tab</p>
+                <p><span class="step-number">3</span> Enter your current password</p>
+                <p><span class="step-number">4</span> Enter and confirm your new password</p>
+                <p><span class="step-number">5</span> Click <strong>Change Password</strong></p>
+
+                <div class="info-box">
+                    <strong>Note:</strong> Password changes take effect immediately. Your credentials in the system credential store are updated automatically.
+                </div>
+            </div>
+
+            <!-- Section 10: Revision History -->
+            <div class="docs-section" id="revisions">
+                <h2>10. Revision History</h2>
+
+                <p>AlderSync keeps multiple versions of files on the server. You can view and restore previous versions through the Revision History viewer.</p>
+
+                <h3>Opening Revision History</h3>
+                <p><span class="step-number">1</span> Click <strong>Menu → Revision History</strong></p>
+                <p><span class="step-number">2</span> The Revision History window opens</p>
+
+                <div class="screenshot">
+                    <div class="screenshot-title">Revision History Window</div>
+                    <img src="/static/images/revision_history.png" alt="Revision History Window" style="max-width: 100%; border: 1px solid #ddd;">
+                </div>
+
+                <h3>Restoring a Previous Version</h3>
+
+                <p><span class="step-number">1</span> Select a file from the dropdown</p>
+                <p><span class="step-number">2</span> View the list of available revisions</p>
+                <p><span class="step-number">3</span> Click <strong>Restore</strong> next to the revision you want</p>
+                <p><span class="step-number">4</span> Confirm the restoration</p>
+                <p><span class="step-number">5</span> The old revision becomes the new current version</p>
+
+                <div class="info-box">
+                    <strong>How Restoration Works:</strong> When you restore a revision, it becomes the new current version. The previous "current" version is preserved as a new revision. No versions are lost.
+                </div>
+
+                <div class="warning-box">
+                    <strong>Server Retention:</strong> The server keeps a configurable number of revisions per file (default: 5). Older revisions beyond this limit are automatically deleted to save disk space.
+                </div>
+            </div>
+
+            <!-- Section 11: Troubleshooting -->
+            <div class="docs-section" id="troubleshooting">
+                <h2>11. Troubleshooting</h2>
+
+                <h3>Cannot Connect to Server</h3>
+                <p><strong>Problem:</strong> "Connection failed" or "Cannot reach server" errors</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Verify the server URL and port in Settings</li>
+                    <li>Check your network connection</li>
+                    <li>Confirm the server is running (ask your administrator)</li>
+                    <li>Try disabling "Verify SSL" if using HTTP (not HTTPS)</li>
+                    <li>Ensure your firewall isn't blocking the connection</li>
+                </ul>
+
+                <h3>Login Failed</h3>
+                <p><strong>Problem:</strong> "Invalid credentials" or "Login failed"</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Double-check your username and password</li>
+                    <li>Passwords are case-sensitive</li>
+                    <li>Contact your administrator to reset your password if needed</li>
+                    <li>Check if your account has been disabled</li>
+                </ul>
+
+                <h3>ProPresenter Folder Not Found</h3>
+                <p><strong>Problem:</strong> "Cannot find ProPresenter folder" error</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Ensure ProPresenter is installed</li>
+                    <li>Check that the ProPresenter folder exists in your Documents</li>
+                    <li>In Settings → Paths, verify the Documents folder path is correct</li>
+                    <li>On Mac, check ~/Documents/ProPresenter/</li>
+                    <li>On Windows, check C:\Users\[YourName]\Documents\ProPresenter\</li>
+                </ul>
+
+                <h3>Operation Cancelled by Administrator</h3>
+                <p><strong>Problem:</strong> "Operation cancelled by administrator" message appears</p>
+                <p><strong>What happened:</strong> An administrator cancelled your operation from the server</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Contact your administrator to understand why</li>
+                    <li>Try again - there may have been a server maintenance issue</li>
+                    <li>All changes are rolled back, so your files are safe</li>
+                </ul>
+
+                <h3>Files Not Uploading/Downloading</h3>
+                <p><strong>Problem:</strong> Operations start but don't complete</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Check your network connection stability</li>
+                    <li>For large files, be patient - they may take time</li>
+                    <li>Check disk space on your computer</li>
+                    <li>Try cancelling and starting again</li>
+                    <li>Check the log panel for specific error messages</li>
+                </ul>
+
+                <h3>Swap Fails - ProPresenter Running</h3>
+                <p><strong>Problem:</strong> "Cannot swap - ProPresenter is running"</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Close ProPresenter completely</li>
+                    <li>Check system tray (Windows) or menu bar (Mac) for ProPresenter icon</li>
+                    <li>Wait a few seconds after closing ProPresenter before swapping</li>
+                    <li>Restart your computer if ProPresenter won't close</li>
+                </ul>
+
+                <h3>Checking the Logs</h3>
+                <p>If you encounter issues, the log panel can provide detailed information:</p>
+                <p><span class="step-number">1</span> Click the <strong>Show Logs</strong> button or checkbox</p>
+                <p><span class="step-number">2</span> Review recent log entries for error messages</p>
+                <p><span class="step-number">3</span> Log files are also saved next to the AlderSync executable</p>
+                <p><span class="step-number">4</span> Share relevant log excerpts with your administrator when reporting issues</p>
+
+                <div class="tip-box">
+                    <strong>Getting Help:</strong> If you continue experiencing problems:
+                    <ul>
+                        <li>Check the log files for detailed error messages</li>
+                        <li>Take a screenshot of any error dialogs</li>
+                        <li>Note what operation you were performing</li>
+                        <li>Contact your administrator with this information</li>
+                    </ul>
+                </div>
+            </div>
+
+            <hr style="margin: 40px 0;">
+
+            <div class="info-box">
+                <strong>Additional Resources:</strong>
+                <ul>
+                    <li><a href="/admin/docs/admin">Administrative Documentation</a> - For administrators managing the server</li>
+                    <li><a href="/admin/docs/technical">Technical Documentation</a> - For developers and technical staff</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

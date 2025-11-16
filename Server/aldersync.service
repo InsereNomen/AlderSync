@@ -1,0 +1,34 @@
+[Unit]
+Description=AlderSync Server
+After=network.target
+Documentation=https://github.com/yourorg/aldersync
+
+[Service]
+Type=simple
+User=aldersync
+Group=aldersync
+WorkingDirectory=/opt/aldersync
+ExecStart=/opt/aldersync/venv/bin/python /opt/aldersync/server.py
+Restart=on-failure
+RestartSec=10
+
+# Environment variables
+Environment="PYTHONUNBUFFERED=1"
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aldersync
+
+# Security hardening (optional but recommended)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/aldersync
+
+# Resource limits (adjust as needed)
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

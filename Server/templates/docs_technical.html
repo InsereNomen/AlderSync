@@ -1,0 +1,2086 @@
+{% extends "base.html" %}
+
+{% block title %}Technical Documentation - AlderSync{% endblock %}
+
+{% block extra_head %}
+<style>
+    .docs-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        background: var(--card-bg);
+    }
+
+    .docs-nav {
+        background: var(--bg-color);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        position: sticky;
+        top: 20px;
+    }
+
+    .docs-nav h3 {
+        margin-top: 0;
+        color: var(--text-color);
+    }
+
+    .docs-nav ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .docs-nav li {
+        margin: 8px 0;
+    }
+
+    .docs-nav a {
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 5px 10px;
+        display: block;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .docs-nav a:visited {
+        color: var(--primary-color);
+    }
+
+    .docs-nav a:hover {
+        background: var(--card-bg);
+    }
+
+    .docs-content {
+        line-height: 1.6;
+    }
+
+    .docs-content a {
+        color: var(--primary-color);
+    }
+
+    .docs-content a:visited {
+        color: var(--primary-color);
+        opacity: 0.8;
+    }
+
+    .docs-section {
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .docs-section h2 {
+        color: var(--text-color);
+        margin-top: 0;
+        padding-top: 20px;
+    }
+
+    .docs-section h3 {
+        color: var(--text-color);
+        margin-top: 25px;
+    }
+
+    .info-box {
+        background: rgba(37, 99, 235, 0.15);
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .tip-box {
+        background: rgba(16, 185, 129, 0.15);
+        border-left: 4px solid var(--success-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .warning-box {
+        background: rgba(245, 158, 11, 0.15);
+        border-left: 4px solid var(--warning-color);
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .code-example {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin: 15px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        white-space: pre;
+        border: 1px solid var(--border-color);
+    }
+
+    .code-comment {
+        color: var(--text-secondary);
+    }
+
+    .code-keyword {
+        color: var(--primary-color);
+    }
+
+    .code-string {
+        color: var(--warning-color);
+    }
+
+    .code-function {
+        color: var(--success-color);
+    }
+
+    code {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+    }
+
+    pre {
+        background: var(--bg-color);
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin: 15px 0;
+        border: 1px solid var(--border-color);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+    }
+
+    table th, table td {
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        text-align: left;
+    }
+
+    table th {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    table td {
+        color: var(--text-color);
+    }
+
+    table tr:nth-child(even) {
+        background: var(--bg-color);
+    }
+
+    table tr:nth-child(odd) {
+        background: var(--card-bg);
+    }
+
+    .directory-tree {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        margin: 15px 0;
+        font-size: 13px;
+        line-height: 1.4;
+        white-space: pre;
+    }
+
+    .directory-tree .dir {
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+
+    .directory-tree .file {
+        color: var(--text-color);
+    }
+
+    .directory-tree .comment {
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    .architecture-box {
+        background: var(--card-bg);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+
+    .layer {
+        background: rgba(37, 99, 235, 0.15);
+        border: 1px solid var(--primary-color);
+        border-radius: 5px;
+        padding: 10px;
+        margin: 8px 0;
+        text-align: center;
+    }
+
+    .endpoint-box {
+        background: var(--bg-color);
+        border-left: 4px solid var(--success-color);
+        padding: 10px;
+        margin: 10px 0;
+    }
+
+    .endpoint-method {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .method-get {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .method-post {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .method-put {
+        background: var(--warning-color);
+        color: white;
+    }
+
+    .method-delete {
+        background: var(--danger-color);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <h1>AlderSync Technical Documentation</h1>
+    <p>This guide provides comprehensive technical information for developers and IT administrators who need to understand or modify the AlderSync codebase.</p>
+
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 30px;">
+        <div class="docs-nav">
+            <h3>Contents</h3>
+            <ul>
+                <li><a href="#stack">1. Technology Stack</a></li>
+                <li><a href="#structure">2. Project Structure</a></li>
+                <li><a href="#database">3. Database Schema</a></li>
+                <li><a href="#api">4. API Reference</a></li>
+                <li><a href="#architecture">5. Code Architecture</a></li>
+                <li><a href="#auth">6. Authentication & RBAC</a></li>
+                <li><a href="#transactions">7. Transaction System</a></li>
+                <li><a href="#file-storage">8. File Storage & Versioning</a></li>
+                <li><a href="#client">9. Client Architecture</a></li>
+                <li><a href="#claude">10. Using Claude Code</a></li>
+                <li><a href="#development">11. Development Workflow</a></li>
+                <li><a href="#testing">12. Testing</a></li>
+                <li><a href="#deployment">13. Building & Deployment</a></li>
+            </ul>
+        </div>
+
+        <div class="docs-content">
+            <!-- Section 1: Technology Stack -->
+            <div class="docs-section" id="stack">
+                <h2>1. Technology Stack</h2>
+
+                <h3>Server (Python)</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                        <th>Version</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Web Framework</td>
+                        <td>FastAPI</td>
+                        <td>Latest</td>
+                        <td>REST API and async web server</td>
+                    </tr>
+                    <tr>
+                        <td>ASGI Server</td>
+                        <td>Uvicorn</td>
+                        <td>Latest</td>
+                        <td>ASGI server for FastAPI</td>
+                    </tr>
+                    <tr>
+                        <td>ORM</td>
+                        <td>SQLAlchemy</td>
+                        <td>2.x</td>
+                        <td>Database abstraction and models</td>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td>SQLite</td>
+                        <td>3.x</td>
+                        <td>Embedded SQL database</td>
+                    </tr>
+                    <tr>
+                        <td>Authentication</td>
+                        <td>python-jose</td>
+                        <td>Latest</td>
+                        <td>JWT token generation and validation</td>
+                    </tr>
+                    <tr>
+                        <td>Password Hashing</td>
+                        <td>passlib (bcrypt)</td>
+                        <td>Latest</td>
+                        <td>Secure password storage</td>
+                    </tr>
+                    <tr>
+                        <td>Templates</td>
+                        <td>Jinja2</td>
+                        <td>Latest</td>
+                        <td>HTML template rendering for admin UI</td>
+                    </tr>
+                    <tr>
+                        <td>Data Validation</td>
+                        <td>Pydantic</td>
+                        <td>2.x</td>
+                        <td>Request/response validation (via FastAPI)</td>
+                    </tr>
+                </table>
+
+                <h3>Client (Python)</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>GUI Framework</td>
+                        <td>Tkinter</td>
+                        <td>Cross-platform desktop GUI</td>
+                    </tr>
+                    <tr>
+                        <td>HTTP Client</td>
+                        <td>requests</td>
+                        <td>API communication</td>
+                    </tr>
+                    <tr>
+                        <td>Credential Storage</td>
+                        <td>keyring</td>
+                        <td>OS-level secure credential storage</td>
+                    </tr>
+                    <tr>
+                        <td>Process Detection</td>
+                        <td>psutil</td>
+                        <td>Detect running ProPresenter process</td>
+                    </tr>
+                    <tr>
+                        <td>Executable Builder</td>
+                        <td>PyInstaller</td>
+                        <td>Create standalone executables</td>
+                    </tr>
+                </table>
+
+                <h3>Deployment</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Container</td>
+                        <td>Docker</td>
+                        <td>Containerization</td>
+                    </tr>
+                    <tr>
+                        <td>Orchestration</td>
+                        <td>Docker Compose</td>
+                        <td>Multi-container deployment</td>
+                    </tr>
+                    <tr>
+                        <td>Management UI</td>
+                        <td>Portainer</td>
+                        <td>Container management for NAS</td>
+                    </tr>
+                    <tr>
+                        <td>Base Image</td>
+                        <td>python:3.9-slim</td>
+                        <td>Minimal Python Docker image</td>
+                    </tr>
+                </table>
+
+                <h3>Development Tools</h3>
+
+                <table>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Claude Code</td>
+                        <td>AI-assisted development and code generation</td>
+                    </tr>
+                    <tr>
+                        <td>Git</td>
+                        <td>Version control</td>
+                    </tr>
+                    <tr>
+                        <td>Virtual Environment (venv)</td>
+                        <td>Isolated Python environments</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Section 2: Project Structure -->
+            <div class="docs-section" id="structure">
+                <h2>2. Project Structure</h2>
+
+                <div class="directory-tree">
+<span class="dir">AlderSync/</span>
+├── <span class="dir">Server/</span>                      <span class="comment"># Server application</span>
+│   ├── <span class="dir">models/</span>                  <span class="comment"># Data models (Pydantic & SQLAlchemy)</span>
+│   │   ├── database.py           <span class="comment"># SQLAlchemy database models</span>
+│   │   ├── auth.py               <span class="comment"># Authentication request/response models</span>
+│   │   └── api.py                <span class="comment"># API request/response models</span>
+│   │
+│   ├── <span class="dir">managers/</span>                <span class="comment"># Business logic managers</span>
+│   │   └── database_manager.py   <span class="comment"># Database operations and queries</span>
+│   │
+│   ├── <span class="dir">routes/</span>                  <span class="comment"># API route handlers</span>
+│   │   ├── <span class="dir">admin/</span>               <span class="comment"># Admin web interface routes</span>
+│   │   │   ├── auth.py           <span class="comment"># Admin login, dashboard</span>
+│   │   │   ├── users.py          <span class="comment"># User management</span>
+│   │   │   ├── roles.py          <span class="comment"># Role management</span>
+│   │   │   ├── files.py          <span class="comment"># File browsing</span>
+│   │   │   ├── operations.py     <span class="comment"># Operations monitoring</span>
+│   │   │   ├── settings.py       <span class="comment"># Server settings</span>
+│   │   │   ├── downloads.py      <span class="comment"># Client downloads</span>
+│   │   │   └── docs.py           <span class="comment"># Documentation pages</span>
+│   │   ├── auth.py               <span class="comment"># API authentication endpoints</span>
+│   │   ├── files.py              <span class="comment"># File list and operations</span>
+│   │   ├── transactions_control.py  <span class="comment"># Transaction lifecycle</span>
+│   │   ├── transactions_files.py    <span class="comment"># File upload/download in transactions</span>
+│   │   ├── status.py             <span class="comment"># Health and status endpoints</span>
+│   │   └── version.py            <span class="comment"># Version checking</span>
+│   │
+│   ├── <span class="dir">templates/</span>               <span class="comment"># Jinja2 HTML templates</span>
+│   │   ├── base.html             <span class="comment"># Base template with navigation</span>
+│   │   ├── login.html            <span class="comment"># Admin login page</span>
+│   │   ├── dashboard.html        <span class="comment"># Admin dashboard</span>
+│   │   ├── users.html            <span class="comment"># User management page</span>
+│   │   ├── files.html            <span class="comment"># File browser page</span>
+│   │   ├── operations.html       <span class="comment"># Operations monitoring</span>
+│   │   ├── settings.html         <span class="comment"># Settings page</span>
+│   │   ├── downloads.html        <span class="comment"># Client downloads page</span>
+│   │   ├── docs_user.html        <span class="comment"># User documentation</span>
+│   │   ├── docs_admin.html       <span class="comment"># Admin documentation</span>
+│   │   └── docs_technical.html   <span class="comment"># Technical documentation</span>
+│   │
+│   ├── <span class="dir">static/</span>                  <span class="comment"># Static files (CSS, JS, images)</span>
+│   │   ├── <span class="dir">css/</span>
+│   │   │   └── admin.css         <span class="comment"># Admin interface styles</span>
+│   │   └── favicon.svg           <span class="comment"># Site favicon</span>
+│   │
+│   ├── <span class="dir">storage/</span>                 <span class="comment"># File storage (gitignored)</span>
+│   │   ├── <span class="dir">Contemporary/</span>        <span class="comment"># Contemporary service files</span>
+│   │   └── <span class="dir">Traditional/</span>         <span class="comment"># Traditional service files</span>
+│   │
+│   ├── <span class="dir">staging/</span>                 <span class="comment"># Transaction staging area (gitignored)</span>
+│   ├── <span class="dir">logs/</span>                    <span class="comment"># Application logs (gitignored)</span>
+│   ├── <span class="dir">client_downloads/</span>        <span class="comment"># Uploaded client executables</span>
+│   │
+│   ├── <span class="dir">portainer-deployment/</span>    <span class="comment"># Portainer deployment package</span>
+│   │   ├── docker-compose.yml    <span class="comment"># Stack configuration</span>
+│   │   ├── PORTAINER-README.md   <span class="comment"># Deployment instructions</span>
+│   │   └── <span class="dir">storage/</span>             <span class="comment"># Empty dirs for bind mounts</span>
+│   │
+│   ├── <span class="dir">tests/</span>                   <span class="comment"># Server test scripts</span>
+│   │
+│   ├── server.py                 <span class="comment"># Main FastAPI application</span>
+│   ├── database.py               <span class="comment"># Database initialization and setup</span>
+│   ├── auth.py                   <span class="comment"># Authentication utilities</span>
+│   ├── file_storage.py           <span class="comment"># File storage operations</span>
+│   ├── transactions.py           <span class="comment"># Transaction management</span>
+│   ├── admin_sessions.py         <span class="comment"># Admin web session management</span>
+│   ├── client_downloads.py       <span class="comment"># Client download management</span>
+│   ├── Dockerfile                <span class="comment"># Docker image definition</span>
+│   ├── docker-compose.yml        <span class="comment"># Local Docker Compose config</span>
+│   ├── requirements.txt          <span class="comment"># Python dependencies</span>
+│   ├── DOCKER.md                 <span class="comment"># Docker deployment guide</span>
+│   └── update_docker_deployment.py  <span class="comment"># Docker update automation script</span>
+│
+├── <span class="dir">Client/</span>                      <span class="comment"># Client application</span>
+│   ├── <span class="dir">tests/</span>                   <span class="comment"># Client test scripts</span>
+│   ├── client.py                 <span class="comment"># Main entry point</span>
+│   ├── gui.py                    <span class="comment"># Tkinter GUI</span>
+│   ├── api.py                    <span class="comment"># Server API communication</span>
+│   ├── config.py                 <span class="comment"># Configuration management</span>
+│   ├── folder_manager.py         <span class="comment"># ProPresenter folder operations</span>
+│   ├── sync_operations.py        <span class="comment"># Pull/Push/Reconcile logic</span>
+│   ├── requirements.txt          <span class="comment"># Python dependencies</span>
+│   └── aldersync.spec            <span class="comment"># PyInstaller build spec</span>
+│
+├── CLAUDE.md                     <span class="comment"># Claude Code instructions</span>
+├── Plan.md                       <span class="comment"># Implementation plan and tasks</span>
+├── Refinements.md                <span class="comment"># Future improvements</span>
+└── progress.html                 <span class="comment"># Task progress tracker</span>
+                </div>
+
+                <h3>Key Design Principles</h3>
+
+                <ul>
+                    <li><strong>Separation of Concerns:</strong> Models, business logic, and routes are separated</li>
+                    <li><strong>Modular Routes:</strong> Each admin page has its own route file</li>
+                    <li><strong>One Class Per File:</strong> Following CLAUDE.md guidelines</li>
+                    <li><strong>Clear Naming:</strong> Functions are verbs, types are nouns, booleans ask questions</li>
+                    <li><strong>No Token Duplication:</strong> Major functions are reusable</li>
+                </ul>
+            </div>
+
+            <!-- Section 3: Database Schema -->
+            <div class="docs-section" id="database">
+                <h2>3. Database Schema</h2>
+
+                <p>AlderSync uses SQLite with SQLAlchemy ORM. All models are defined in <code>Server/models/database.py</code>.</p>
+
+                <h3>Users Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>user_id</td>
+                        <td>Integer</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Unique user identifier</td>
+                    </tr>
+                    <tr>
+                        <td>username</td>
+                        <td>String(50)</td>
+                        <td>UNIQUE, NOT NULL</td>
+                        <td>Username for login</td>
+                    </tr>
+                    <tr>
+                        <td>password_hash</td>
+                        <td>String(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Bcrypt password hash</td>
+                    </tr>
+                    <tr>
+                        <td>role_id</td>
+                        <td>Integer</td>
+                        <td>FOREIGN KEY → roles.role_id</td>
+                        <td>User's assigned role</td>
+                    </tr>
+                    <tr>
+                        <td>is_active</td>
+                        <td>Boolean</td>
+                        <td>DEFAULT TRUE</td>
+                        <td>Account enabled status</td>
+                    </tr>
+                    <tr>
+                        <td>created_at</td>
+                        <td>DateTime</td>
+                        <td>DEFAULT UTC NOW</td>
+                        <td>Account creation time</td>
+                    </tr>
+                    <tr>
+                        <td>last_login</td>
+                        <td>DateTime</td>
+                        <td>NULLABLE</td>
+                        <td>Last successful login</td>
+                    </tr>
+                </table>
+
+                <h3>Roles Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>role_id</td>
+                        <td>Integer</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Unique role identifier</td>
+                    </tr>
+                    <tr>
+                        <td>role_name</td>
+                        <td>String(50)</td>
+                        <td>UNIQUE, NOT NULL</td>
+                        <td>Role name</td>
+                    </tr>
+                    <tr>
+                        <td>description</td>
+                        <td>String(255)</td>
+                        <td>NULLABLE</td>
+                        <td>Role description</td>
+                    </tr>
+                    <tr>
+                        <td>created_at</td>
+                        <td>DateTime</td>
+                        <td>DEFAULT UTC NOW</td>
+                        <td>Role creation time</td>
+                    </tr>
+                </table>
+
+                <h3>Permissions Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>permission_id</td>
+                        <td>Integer</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Unique permission identifier</td>
+                    </tr>
+                    <tr>
+                        <td>permission_name</td>
+                        <td>String(50)</td>
+                        <td>UNIQUE, NOT NULL</td>
+                        <td>Permission name (admin, can_push, can_reconcile)</td>
+                    </tr>
+                    <tr>
+                        <td>description</td>
+                        <td>String(255)</td>
+                        <td>NULLABLE</td>
+                        <td>Permission description</td>
+                    </tr>
+                </table>
+
+                <h3>RolePermissions Table (Junction)</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>role_id</td>
+                        <td>Integer</td>
+                        <td>FOREIGN KEY → roles.role_id</td>
+                        <td>Role reference</td>
+                    </tr>
+                    <tr>
+                        <td>permission_id</td>
+                        <td>Integer</td>
+                        <td>FOREIGN KEY → permissions.permission_id</td>
+                        <td>Permission reference</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><strong>PRIMARY KEY (role_id, permission_id)</strong></td>
+                    </tr>
+                </table>
+
+                <h3>Files Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>file_id</td>
+                        <td>Integer</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Unique file identifier</td>
+                    </tr>
+                    <tr>
+                        <td>path</td>
+                        <td>String(512)</td>
+                        <td>NOT NULL</td>
+                        <td>Relative file path</td>
+                    </tr>
+                    <tr>
+                        <td>service_type</td>
+                        <td>String(50)</td>
+                        <td>NOT NULL</td>
+                        <td>"Contemporary" or "Traditional"</td>
+                    </tr>
+                    <tr>
+                        <td>size</td>
+                        <td>BigInteger</td>
+                        <td>NULLABLE</td>
+                        <td>File size in bytes (NULL if deleted)</td>
+                    </tr>
+                    <tr>
+                        <td>hash</td>
+                        <td>String(64)</td>
+                        <td>NULLABLE</td>
+                        <td>SHA-256 hash (NULL if deleted)</td>
+                    </tr>
+                    <tr>
+                        <td>modified_utc</td>
+                        <td>DateTime</td>
+                        <td>NOT NULL</td>
+                        <td>Last modification time (UTC)</td>
+                    </tr>
+                    <tr>
+                        <td>is_deleted</td>
+                        <td>Boolean</td>
+                        <td>DEFAULT FALSE</td>
+                        <td>Soft delete flag</td>
+                    </tr>
+                    <tr>
+                        <td>user_id</td>
+                        <td>Integer</td>
+                        <td>FOREIGN KEY → users.user_id</td>
+                        <td>User who last modified</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><strong>UNIQUE INDEX (path, service_type)</strong></td>
+                    </tr>
+                </table>
+
+                <h3>Operations Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>operation_id</td>
+                        <td>Integer</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Unique operation identifier</td>
+                    </tr>
+                    <tr>
+                        <td>transaction_id</td>
+                        <td>String(36)</td>
+                        <td>UNIQUE, NOT NULL</td>
+                        <td>UUID for transaction</td>
+                    </tr>
+                    <tr>
+                        <td>user_id</td>
+                        <td>Integer</td>
+                        <td>FOREIGN KEY → users.user_id</td>
+                        <td>User performing operation</td>
+                    </tr>
+                    <tr>
+                        <td>operation_type</td>
+                        <td>String(20)</td>
+                        <td>NOT NULL</td>
+                        <td>"Pull", "Push", or "Reconcile"</td>
+                    </tr>
+                    <tr>
+                        <td>service_type</td>
+                        <td>String(50)</td>
+                        <td>NOT NULL</td>
+                        <td>"Contemporary" or "Traditional"</td>
+                    </tr>
+                    <tr>
+                        <td>started_at</td>
+                        <td>DateTime</td>
+                        <td>NOT NULL</td>
+                        <td>Operation start time</td>
+                    </tr>
+                    <tr>
+                        <td>completed_at</td>
+                        <td>DateTime</td>
+                        <td>NULLABLE</td>
+                        <td>Operation completion time</td>
+                    </tr>
+                    <tr>
+                        <td>status</td>
+                        <td>String(20)</td>
+                        <td>NOT NULL</td>
+                        <td>"in_progress", "completed", "failed", "cancelled_by_admin", "rolled_back"</td>
+                    </tr>
+                    <tr>
+                        <td>files_pulled</td>
+                        <td>Integer</td>
+                        <td>DEFAULT 0</td>
+                        <td>Number of files downloaded</td>
+                    </tr>
+                    <tr>
+                        <td>files_pushed</td>
+                        <td>Integer</td>
+                        <td>DEFAULT 0</td>
+                        <td>Number of files uploaded</td>
+                    </tr>
+                    <tr>
+                        <td>error_message</td>
+                        <td>Text</td>
+                        <td>NULLABLE</td>
+                        <td>Error details if failed</td>
+                    </tr>
+                </table>
+
+                <h3>Settings Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>key</td>
+                        <td>String(50)</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Setting key name</td>
+                    </tr>
+                    <tr>
+                        <td>value</td>
+                        <td>String(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Setting value (as string)</td>
+                    </tr>
+                    <tr>
+                        <td>description</td>
+                        <td>String(255)</td>
+                        <td>NULLABLE</td>
+                        <td>Setting description</td>
+                    </tr>
+                </table>
+
+                <h3>LastOperation Table</h3>
+
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>Integer</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Always 1 (single row table)</td>
+                    </tr>
+                    <tr>
+                        <td>operation_type</td>
+                        <td>String(20)</td>
+                        <td>NULLABLE</td>
+                        <td>Last operation type</td>
+                    </tr>
+                    <tr>
+                        <td>completed_at</td>
+                        <td>DateTime</td>
+                        <td>NULLABLE</td>
+                        <td>Last operation completion time</td>
+                    </tr>
+                </table>
+
+                <div class="tip-box">
+                    <strong>Database Access:</strong> Always use the <code>DatabaseManager</code> class for database operations. It provides session management, proper error handling, and transaction support.
+                </div>
+            </div>
+
+            <!-- Section 4: API Reference -->
+            <div class="docs-section" id="api">
+                <h2>4. API Reference</h2>
+
+                <p>The AlderSync API is a RESTful API with JSON request/response bodies. Full interactive documentation is available at <code>http://server:8000/docs</code> (Swagger UI) and <code>http://server:8000/redoc</code> (ReDoc).</p>
+
+                <h3>Authentication Endpoints</h3>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-post">POST</span> <code>/auth/login</code><br>
+                    <strong>Description:</strong> Authenticate user and receive JWT token<br>
+                    <strong>Request:</strong> <code>{"username": "user", "password": "pass"}</code><br>
+                    <strong>Response:</strong> <code>{"access_token": "eyJ...", "token_type": "bearer", "username": "user", "permissions": [...]}</code>
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-put">PUT</span> <code>/user/change_password</code><br>
+                    <strong>Description:</strong> Change current user's password<br>
+                    <strong>Auth:</strong> Required (Bearer token)<br>
+                    <strong>Request:</strong> <code>{"old_password": "old", "new_password": "new"}</code>
+                </div>
+
+                <h3>File Endpoints</h3>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-get">GET</span> <code>/files/list?service_type=Contemporary</code><br>
+                    <strong>Description:</strong> List all non-deleted files for a service<br>
+                    <strong>Auth:</strong> Required<br>
+                    <strong>Response:</strong> <code>[{"path": "...", "size": 123, "hash": "abc...", "modified_utc": "..."}]</code>
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-get">GET</span> <code>/files/download?path=...&service_type=Contemporary</code><br>
+                    <strong>Description:</strong> Download a file<br>
+                    <strong>Auth:</strong> Required<br>
+                    <strong>Response:</strong> File content (binary stream)
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-get">GET</span> <code>/files/revisions?path=...&service_type=Contemporary</code><br>
+                    <strong>Description:</strong> Get list of file revisions<br>
+                    <strong>Auth:</strong> Required<br>
+                    <strong>Response:</strong> <code>[{"revision": 0, "size": 123, "modified": "...", "hash": "..."}]</code>
+                </div>
+
+                <h3>Transaction Endpoints</h3>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-post">POST</span> <code>/transaction/begin</code><br>
+                    <strong>Description:</strong> Begin a new sync transaction (Pull, Push, or Reconcile)<br>
+                    <strong>Auth:</strong> Required (with appropriate permissions)<br>
+                    <strong>Request:</strong> <code>{"operation_type": "Pull", "service_type": "Contemporary", "local_files": [...]}</code><br>
+                    <strong>Response:</strong> <code>{"transaction_id": "uuid", "timeout_seconds": 3600, "files_to_pull": [...], "files_to_push": [...]}</code>
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-post">POST</span> <code>/transaction/{transaction_id}/upload_file</code><br>
+                    <strong>Description:</strong> Upload a file within an active transaction<br>
+                    <strong>Auth:</strong> Required<br>
+                    <strong>Request:</strong> Multipart form data with file and metadata
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-post">POST</span> <code>/transaction/{transaction_id}/commit</code><br>
+                    <strong>Description:</strong> Commit transaction (finalize all changes)<br>
+                    <strong>Auth:</strong> Required<br>
+                    <strong>Response:</strong> <code>{"status": "committed", "files_processed": 10}</code>
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-post">POST</span> <code>/transaction/{transaction_id}/rollback</code><br>
+                    <strong>Description:</strong> Rollback transaction (discard all changes)<br>
+                    <strong>Auth:</strong> Required
+                </div>
+
+                <h3>Status Endpoints</h3>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-get">GET</span> <code>/health</code><br>
+                    <strong>Description:</strong> Server health check<br>
+                    <strong>Auth:</strong> Not required<br>
+                    <strong>Response:</strong> <code>{"status": "healthy", "database": "connected", "uptime_seconds": 3600}</code>
+                </div>
+
+                <div class="endpoint-box">
+                    <span class="endpoint-method method-get">GET</span> <code>/status/last_operation</code><br>
+                    <strong>Description:</strong> Get last completed operation info<br>
+                    <strong>Auth:</strong> Not required
+                </div>
+
+                <div class="tip-box">
+                    <strong>Interactive Docs:</strong> Visit <code>http://server:8000/docs</code> to test API endpoints interactively with Swagger UI. You can authenticate with a JWT token and execute requests directly from the browser.
+                </div>
+            </div>
+
+            <!-- Section 5: Code Architecture -->
+            <div class="docs-section" id="architecture">
+                <h2>5. Code Architecture</h2>
+
+                <h3>Server Architecture Layers</h3>
+
+                <div class="architecture-box">
+                    <div class="layer" style="background: #ffebee;">
+                        <strong>Presentation Layer</strong><br>
+                        routes/admin/*.py - Admin web interface<br>
+                        templates/*.html - Jinja2 templates
+                    </div>
+                    ⬇
+                    <div class="layer" style="background: #e1f5fe;">
+                        <strong>API Layer</strong><br>
+                        routes/*.py - REST API endpoints<br>
+                        FastAPI routers and dependencies
+                    </div>
+                    ⬇
+                    <div class="layer" style="background: #f3e5f5;">
+                        <strong>Business Logic Layer</strong><br>
+                        auth.py - Authentication logic<br>
+                        file_storage.py - File operations<br>
+                        transactions.py - Transaction management
+                    </div>
+                    ⬇
+                    <div class="layer" style="background: #fff3e0;">
+                        <strong>Data Access Layer</strong><br>
+                        managers/database_manager.py - Database operations<br>
+                        models/database.py - SQLAlchemy ORM models
+                    </div>
+                    ⬇
+                    <div class="layer" style="background: #e8f5e9;">
+                        <strong>Data Layer</strong><br>
+                        SQLite Database - Persistent storage<br>
+                        Filesystem - File storage
+                    </div>
+                </div>
+
+                <h3>Request Flow Example (Pull Operation)</h3>
+
+                <div class="code-example">
+<span class="code-comment"># 1. Client sends request</span>
+POST /transaction/begin
+{
+  "operation_type": "Pull",
+  "service_type": "Contemporary",
+  "local_files": [...]
+}
+
+<span class="code-comment"># 2. Route handler (routes/transactions_control.py)</span>
+<span class="code-keyword">async def</span> <span class="code-function">BeginTransaction</span>(...):
+    <span class="code-comment"># Validates request</span>
+    <span class="code-comment"># Checks permissions</span>
+    <span class="code-comment"># Acquires server lock</span>
+
+<span class="code-comment"># 3. Business logic (transactions.py)</span>
+<span class="code-keyword">def</span> <span class="code-function">CreateTransaction</span>(...):
+    <span class="code-comment"># Creates transaction record</span>
+    <span class="code-comment"># Compares files</span>
+    <span class="code-comment"># Generates file lists</span>
+
+<span class="code-comment"># 4. Data access (managers/database_manager.py)</span>
+<span class="code-keyword">def</span> <span class="code-function">CreateOperation</span>(...):
+    <span class="code-comment"># Inserts operation into database</span>
+
+<span class="code-comment"># 5. File operations (file_storage.py)</span>
+<span class="code-keyword">def</span> <span class="code-function">ListFiles</span>(...):
+    <span class="code-comment"># Queries file metadata</span>
+    <span class="code-comment"># Returns file list</span>
+
+<span class="code-comment"># 6. Response back to client</span>
+{
+  "transaction_id": "abc-123",
+  "timeout_seconds": 3600,
+  "files_to_pull": [...]
+}
+                </div>
+
+                <h3>Dependency Injection Pattern</h3>
+
+                <p>FastAPI uses dependency injection extensively. AlderSync follows this pattern:</p>
+
+                <div class="code-example">
+<span class="code-comment"># Define dependency function</span>
+<span class="code-keyword">def</span> <span class="code-function">GetCurrentUser</span>(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+    <span class="code-string">"""Extract and validate user from JWT token"""</span>
+    token_data = DecodeAccessToken(credentials.credentials)
+    user = <span class="code-comment"># ... fetch from database</span>
+    <span class="code-keyword">return</span> user
+
+<span class="code-comment"># Use in endpoint</span>
+<span class="code-keyword">@router.post</span>(<span class="code-string">"/files/upload"</span>)
+<span class="code-keyword">async def</span> <span class="code-function">UploadFile</span>(
+    file: UploadFile,
+    current_user: User = Depends(GetCurrentUser)  <span class="code-comment"># Dependency injected</span>
+):
+    <span class="code-comment"># current_user is automatically populated</span>
+    <span class="code-keyword">pass</span>
+                </div>
+
+                <h3>Error Handling Pattern</h3>
+
+                <div class="code-example">
+<span class="code-keyword">try</span>:
+    <span class="code-comment"># Perform operation</span>
+    result = some_operation()
+
+<span class="code-keyword">except</span> SpecificException <span class="code-keyword">as</span> e:
+    <span class="code-comment"># Log error</span>
+    logger.error(<span class="code-string">f"Operation failed: {e}"</span>)
+
+    <span class="code-comment"># Raise HTTP exception with appropriate status</span>
+    <span class="code-keyword">raise</span> HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=<span class="code-string">f"Error message: {str(e)}"</span>
+    )
+
+<span class="code-keyword">finally</span>:
+    <span class="code-comment"># Always clean up resources (close DB session, etc.)</span>
+    session.close()
+                </div>
+
+                <div class="tip-box">
+                    <strong>Code Style:</strong> Follow the conventions in <code>CLAUDE.md</code>:
+                    <ul>
+                        <li>Types and variables: Nouns (e.g., <code>FileMetadata</code>, <code>username</code>)</li>
+                        <li>Functions: Verbs describing effect or return value (e.g., <code>CreateTransaction()</code>, <code>GetUser()</code>)</li>
+                        <li>Booleans: Questions (e.g., <code>IsActive()</code>, <code>HasPermission()</code>)</li>
+                        <li>Clear, unambiguous names - avoid "Handle" or "Process"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 6: Authentication & RBAC -->
+            <div class="docs-section" id="auth">
+                <h2>6. Authentication & RBAC</h2>
+
+                <h3>JWT Authentication Flow</h3>
+
+                <div class="code-example">
+<span class="code-comment"># 1. User logs in</span>
+POST /auth/login
+{ "username": "admin", "password": "password" }
+
+<span class="code-comment"># 2. Server validates credentials</span>
+user = AuthenticateUser(db_manager, username, password)
+<span class="code-keyword">if</span> user:
+    <span class="code-comment"># 3. Generate JWT token</span>
+    token_data = {
+        "user_id": user.user_id,
+        "username": user.username,
+        "permissions": [<span class="code-string">"admin"</span>, <span class="code-string">"can_push"</span>, ...]
+    }
+    token = CreateAccessToken(token_data, db_manager)
+
+<span class="code-comment"># 4. Return token to client</span>
+<span class="code-keyword">return</span> { "access_token": token, "token_type": "bearer" }
+
+<span class="code-comment"># 5. Client includes token in subsequent requests</span>
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+<span class="code-comment"># 6. Server validates token on each request</span>
+token_data = DecodeAccessToken(token)
+user = GetUserFromDatabase(token_data.user_id)
+                </div>
+
+                <h3>Role-Based Access Control (RBAC)</h3>
+
+                <p>Permission checking is implemented using FastAPI dependencies:</p>
+
+                <div class="code-example">
+<span class="code-comment"># Define permission requirement</span>
+<span class="code-keyword">def</span> <span class="code-function">RequirePermission</span>(permission_name: str):
+    <span class="code-keyword">def</span> <span class="code-function">permission_checker</span>(current_user: User = Depends(GetCurrentActiveUser)) -> User:
+        <span class="code-keyword">if not</span> UserHasPermission(current_user, permission_name):
+            <span class="code-keyword">raise</span> HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=<span class="code-string">f"Permission denied. Required: {permission_name}"</span>
+            )
+        <span class="code-keyword">return</span> current_user
+    <span class="code-keyword">return</span> permission_checker
+
+<span class="code-comment"># Use in endpoint</span>
+<span class="code-keyword">@router.post</span>(<span class="code-string">"/transaction/begin"</span>)
+<span class="code-keyword">async def</span> <span class="code-function">BeginTransaction</span>(
+    request: TransactionBeginRequest,
+    current_user: User = Depends(RequirePermission(<span class="code-string">"can_push"</span>))
+):
+    <span class="code-comment"># Only users with can_push permission can access</span>
+    <span class="code-keyword">pass</span>
+                </div>
+
+                <h3>Permission Hierarchy</h3>
+
+                <ul>
+                    <li><strong>admin</strong> permission grants ALL other permissions automatically</li>
+                    <li><strong>can_push</strong> allows Push operations (upload files)</li>
+                    <li><strong>can_reconcile</strong> allows Reconcile operations (bidirectional sync)</li>
+                    <li>ALL users can Pull (download) files - no permission required</li>
+                </ul>
+
+                <h3>Adding New Permissions</h3>
+
+                <p>To add a new permission:</p>
+
+                <p><span class="step-number">1</span> Add permission to database initialization in <code>database.py</code>:</p>
+
+                <div class="code-example">
+<span class="code-comment"># In database.py initialization</span>
+permissions = [
+    Permission(permission_name=<span class="code-string">"admin"</span>, description=<span class="code-string">"Full system access"</span>),
+    Permission(permission_name=<span class="code-string">"can_push"</span>, description=<span class="code-string">"Upload files"</span>),
+    Permission(permission_name=<span class="code-string">"can_reconcile"</span>, description=<span class="code-string">"Bidirectional sync"</span>),
+    <span class="code-comment"># Add new permission:</span>
+    Permission(permission_name=<span class="code-string">"can_delete_files"</span>, description=<span class="code-string">"Delete server files"</span>),
+]
+                </div>
+
+                <p><span class="step-number">2</span> Create a convenience dependency in <code>auth.py</code>:</p>
+
+                <div class="code-example">
+RequireCanDeleteFiles = RequirePermission(<span class="code-string">"can_delete_files"</span>)
+                </div>
+
+                <p><span class="step-number">3</span> Use in endpoints:</p>
+
+                <div class="code-example">
+<span class="code-keyword">@router.delete</span>(<span class="code-string">"/files/delete"</span>)
+<span class="code-keyword">async def</span> <span class="code-function">DeleteFile</span>(
+    path: str,
+    current_user: User = Depends(RequireCanDeleteFiles)
+):
+    <span class="code-comment"># Only users with can_delete_files permission</span>
+    <span class="code-keyword">pass</span>
+                </div>
+            </div>
+
+            <!-- Section 7: Transaction System -->
+            <div class="docs-section" id="transactions">
+                <h2>7. Transaction System</h2>
+
+                <p>The transaction system ensures atomic operations and prevents concurrent modifications.</p>
+
+                <h3>Transaction Lifecycle</h3>
+
+                <div class="code-example">
+<span class="code-comment"># 1. BEGIN - Acquire lock, create transaction</span>
+transaction_id = CreateTransaction(
+    user_id, operation_type, service_type, local_files
+)
+<span class="code-comment"># Server lock is acquired (only one transaction at a time)</span>
+
+<span class="code-comment"># 2. FILES - Upload/download files to/from staging area</span>
+<span class="code-keyword">for</span> file <span class="code-keyword">in</span> files_to_upload:
+    UploadFileToStaging(transaction_id, file)
+<span class="code-comment"># Files are placed in staging/{transaction_id}/ directory</span>
+
+<span class="code-comment"># 3. COMMIT - Move files to permanent storage, update database</span>
+CommitTransaction(transaction_id)
+<span class="code-comment"># Files moved from staging to storage/</span>
+<span class="code-comment"># Database updated with new file metadata</span>
+<span class="code-comment"># Lock released</span>
+
+<span class="code-comment"># OR: ROLLBACK - Delete staged files, discard changes</span>
+RollbackTransaction(transaction_id)
+<span class="code-comment"># Staging directory deleted</span>
+<span class="code-comment"># No changes to storage/ or database</span>
+<span class="code-comment"># Lock released</span>
+                </div>
+
+                <h3>Server Lock Mechanism</h3>
+
+                <p>The server lock prevents concurrent transactions:</p>
+
+                <div class="code-example">
+<span class="code-comment"># In transactions.py</span>
+
+<span class="code-comment"># Global lock state (in-memory)</span>
+_server_lock = {
+    <span class="code-string">"locked"</span>: False,
+    <span class="code-string">"transaction_id"</span>: None,
+    <span class="code-string">"user_id"</span>: None,
+    <span class="code-string">"acquired_at"</span>: None,
+    <span class="code-string">"timeout_seconds"</span>: 0
+}
+
+<span class="code-keyword">def</span> <span class="code-function">AcquireLock</span>(transaction_id, user_id, timeout_seconds):
+    <span class="code-keyword">if</span> _server_lock[<span class="code-string">"locked"</span>]:
+        <span class="code-comment"># Check if timed out</span>
+        <span class="code-keyword">if</span> IsLockExpired():
+            <span class="code-comment"># Timeout expired, rollback old transaction</span>
+            RollbackTransaction(_server_lock[<span class="code-string">"transaction_id"</span>])
+            ReleaseLock()
+        <span class="code-keyword">else</span>:
+            <span class="code-comment"># Lock still held</span>
+            <span class="code-keyword">raise</span> Exception(<span class="code-string">"Server busy"</span>)
+
+    <span class="code-comment"># Acquire lock</span>
+    _server_lock[<span class="code-string">"locked"</span>] = True
+    _server_lock[<span class="code-string">"transaction_id"</span>] = transaction_id
+    <span class="code-comment"># ...</span>
+                </div>
+
+                <h3>Timeout Calculation</h3>
+
+                <p>Reconcile operations use dynamic timeout based on file count:</p>
+
+                <div class="code-example">
+<span class="code-keyword">def</span> <span class="code-function">CalculateDynamicTimeout</span>(file_count):
+    <span class="code-comment"># Base: 60 seconds per file (upload + download time)</span>
+    calculated_timeout = file_count * 60
+
+    <span class="code-comment"># Enforce minimum from settings</span>
+    min_timeout = GetSetting(<span class="code-string">"min_lock_timeout_seconds"</span>)  <span class="code-comment"># Default: 300</span>
+    <span class="code-keyword">if</span> calculated_timeout < min_timeout:
+        calculated_timeout = min_timeout
+
+    <span class="code-keyword">return</span> calculated_timeout
+                </div>
+
+                <h3>Admin Cancellation</h3>
+
+                <p>Admins can cancel transactions from the Operations page:</p>
+
+                <div class="code-example">
+<span class="code-comment"># In routes/admin/operations.py</span>
+
+<span class="code-keyword">@router.post</span>(<span class="code-string">"/admin/operations/cancel/{transaction_id}"</span>)
+<span class="code-keyword">async def</span> <span class="code-function">CancelOperation</span>(transaction_id: str):
+    <span class="code-comment"># Mark transaction as cancelled</span>
+    transaction = GetTransaction(transaction_id)
+    transaction.status = <span class="code-string">"cancelled_by_admin"</span>
+
+    <span class="code-comment"># Rollback changes</span>
+    RollbackTransaction(transaction_id)
+
+    <span class="code-comment"># Client polls status and sees cancellation</span>
+    <span class="code-comment"># Client performs local rollback</span>
+                </div>
+
+                <div class="warning-box">
+                    <strong>Lock Safety:</strong> Always release the lock in <code>finally</code> blocks to prevent deadlocks. The lock timeout provides a fallback if something goes wrong.
+                </div>
+            </div>
+
+            <!-- Section 8: File Storage & Versioning -->
+            <div class="docs-section" id="file-storage">
+                <h2>8. File Storage & Versioning</h2>
+
+                <h3>File Storage Structure</h3>
+
+                <div class="directory-tree">
+Server/storage/
+├── Contemporary/
+│   ├── Songs/
+│   │   ├── Amazing Grace.pro                <span class="comment"># Current version</span>
+│   │   ├── Amazing Grace.1.pro              <span class="comment"># Revision 1</span>
+│   │   ├── Amazing Grace.2.pro              <span class="comment"># Revision 2</span>
+│   │   └── How Great Thou Art.pro
+│   └── Presentations/
+│       └── ...
+│
+└── Traditional/
+    ├── Songs/
+    └── Presentations/
+                </div>
+
+                <h3>Revision Naming Convention</h3>
+
+                <p>Revision files use the format: <code>filename.N.ext</code></p>
+
+                <div class="code-example">
+<span class="code-keyword">def</span> <span class="code-function">GetRevisionPath</span>(original_path, revision_number):
+    <span class="code-string">"""
+    Convert original path to revision path
+    Example: "Songs/File.pro" + revision 3 -> "Songs/File.3.pro"
+    """</span>
+    path_obj = Path(original_path)
+    stem = path_obj.stem  <span class="code-comment"># "File"</span>
+    suffix = path_obj.suffix  <span class="code-comment"># ".pro"</span>
+    parent = path_obj.parent  <span class="code-comment"># "Songs/"</span>
+
+    revision_name = <span class="code-string">f"{stem}.{revision_number}{suffix}"</span>
+    <span class="code-keyword">return</span> parent / revision_name
+                </div>
+
+                <h3>File Upload and Versioning</h3>
+
+                <div class="code-example">
+<span class="code-keyword">def</span> <span class="code-function">CreateRevision</span>(service_type, relative_path, db_manager):
+    <span class="code-string">"""
+    Create a new revision of an existing file
+    """</span>
+    <span class="code-comment"># 1. Get current file path</span>
+    current_path = GetFilePath(service_type, relative_path)
+
+    <span class="code-comment"># 2. Find highest existing revision number</span>
+    existing_revisions = GetAllRevisions(service_type, relative_path)
+    next_revision = len(existing_revisions) + 1
+
+    <span class="code-comment"># 3. Rename current file to revision</span>
+    revision_path = GetRevisionPath(current_path, next_revision)
+    shutil.move(current_path, revision_path)
+
+    <span class="code-comment"># 4. Check revision limit and delete old revisions if needed</span>
+    max_revisions = GetSetting(<span class="code-string">"max_revisions"</span>)  <span class="code-comment"># Default: 5</span>
+    <span class="code-keyword">if</span> next_revision > max_revisions:
+        <span class="code-comment"># Delete oldest revision (revision 1)</span>
+        oldest_revision_path = GetRevisionPath(current_path, 1)
+        os.remove(oldest_revision_path)
+
+        <span class="code-comment"># Renumber remaining revisions</span>
+        <span class="code-keyword">for</span> i <span class="code-keyword">in</span> range(2, next_revision + 1):
+            old_path = GetRevisionPath(current_path, i)
+            new_path = GetRevisionPath(current_path, i - 1)
+            shutil.move(old_path, new_path)
+
+    <span class="code-comment"># 5. New file can now be written to current_path</span>
+    <span class="code-keyword">return</span> current_path
+                </div>
+
+                <h3>File Hashing</h3>
+
+                <p>SHA-256 hashes are used for file integrity verification:</p>
+
+                <div class="code-example">
+<span class="code-keyword">def</span> <span class="code-function">CalculateFileHash</span>(file_path):
+    <span class="code-string">"""
+    Calculate SHA-256 hash of file
+    """</span>
+    sha256 = hashlib.sha256()
+
+    <span class="code-keyword">with</span> open(file_path, <span class="code-string">'rb'</span>) <span class="code-keyword">as</span> f:
+        <span class="code-comment"># Read file in chunks to handle large files</span>
+        <span class="code-keyword">for</span> chunk <span class="code-keyword">in</span> iter(<span class="code-keyword">lambda</span>: f.read(8192), b<span class="code-string">''</span>):
+            sha256.update(chunk)
+
+    <span class="code-keyword">return</span> sha256.hexdigest()  <span class="code-comment"># Returns 64-character hex string</span>
+                </div>
+
+                <h3>Soft Delete</h3>
+
+                <p>Files are soft-deleted (marked as deleted but preserved on disk):</p>
+
+                <div class="code-example">
+<span class="code-keyword">def</span> <span class="code-function">DeleteFile</span>(service_type, relative_path, db_manager):
+    <span class="code-comment"># 1. Update database - mark as deleted</span>
+    file_record = GetFileRecord(service_type, relative_path)
+    file_record.is_deleted = True
+    file_record.size = None
+    file_record.hash = None
+    db_manager.Commit()
+
+    <span class="code-comment"># 2. Preserve file on disk as a revision</span>
+    current_path = GetFilePath(service_type, relative_path)
+    revision_path = GetRevisionPath(current_path, <span class="code-string">"deleted"</span>)
+    shutil.move(current_path, revision_path)
+
+    <span class="code-comment"># File is hidden from listings but can be recovered</span>
+                </div>
+
+                <div class="tip-box">
+                    <strong>Recovery:</strong> Soft-deleted files can be recovered by copying the deleted revision back and updating the database record to set <code>is_deleted=False</code> and recalculate size/hash.
+                </div>
+            </div>
+
+            <!-- Section 9: Client Architecture -->
+            <div class="docs-section" id="client">
+                <h2>9. Client Architecture</h2>
+
+                <h3>Client Components</h3>
+
+                <table>
+                    <tr>
+                        <th>Module</th>
+                        <th>Responsibility</th>
+                    </tr>
+                    <tr>
+                        <td><code>client.py</code></td>
+                        <td>Main entry point, CLI argument parsing, mode selection (GUI/CLI)</td>
+                    </tr>
+                    <tr>
+                        <td><code>gui.py</code></td>
+                        <td>Tkinter GUI, user interface, button handlers, status updates</td>
+                    </tr>
+                    <tr>
+                        <td><code>api.py</code></td>
+                        <td>HTTP communication with server, JWT authentication, request wrappers</td>
+                    </tr>
+                    <tr>
+                        <td><code>config.py</code></td>
+                        <td>Configuration file management (~/.aldersync/config.json), credential storage</td>
+                    </tr>
+                    <tr>
+                        <td><code>folder_manager.py</code></td>
+                        <td>ProPresenter folder detection, validation, swapping operations</td>
+                    </tr>
+                    <tr>
+                        <td><code>sync_operations.py</code></td>
+                        <td>Pull/Push/Reconcile logic, transaction handling, local backup/rollback</td>
+                    </tr>
+                </table>
+
+                <h3>Client Workflow (Pull Example)</h3>
+
+                <div class="code-example">
+<span class="code-comment"># 1. User clicks Pull button (gui.py)</span>
+<span class="code-keyword">def</span> <span class="code-function">OnPullClick</span>():
+    <span class="code-comment"># Disable buttons, show progress</span>
+    DisableOperationButtons()
+    UpdateStatus(<span class="code-string">"Starting Pull operation..."</span>)
+
+    <span class="code-comment"># Execute pull in background thread</span>
+    threading.Thread(target=ExecutePull).start()
+
+<span class="code-comment"># 2. Pull operation (sync_operations.py)</span>
+<span class="code-keyword">def</span> <span class="code-function">ExecutePull</span>(api_client, service_type):
+    <span class="code-comment"># Create local backup</span>
+    backup_dir = CreateLocalBackup()
+
+    <span class="code-keyword">try</span>:
+        <span class="code-comment"># Begin transaction with server</span>
+        response = api_client.BeginTransaction(<span class="code-string">"Pull"</span>, service_type)
+        transaction_id = response[<span class="code-string">"transaction_id"</span>]
+        files_to_pull = response[<span class="code-string">"files_to_pull"</span>]
+
+        <span class="code-comment"># Download each file</span>
+        <span class="code-keyword">for</span> file <span class="code-keyword">in</span> files_to_pull:
+            DownloadFile(api_client, transaction_id, file)
+            UpdateProgress(...)
+
+        <span class="code-comment"># Commit transaction</span>
+        api_client.CommitTransaction(transaction_id)
+
+        <span class="code-comment"># Delete backup</span>
+        DeleteBackup(backup_dir)
+
+        UpdateStatus(<span class="code-string">"Pull completed successfully"</span>)
+
+    <span class="code-keyword">except</span> Exception <span class="code-keyword">as</span> e:
+        <span class="code-comment"># Rollback: restore from backup</span>
+        RestoreFromBackup(backup_dir)
+
+        <span class="code-comment"># Rollback transaction on server</span>
+        api_client.RollbackTransaction(transaction_id)
+
+        UpdateStatus(<span class="code-string">f"Pull failed: {e}"</span>)
+
+    <span class="code-keyword">finally</span>:
+        EnableOperationButtons()
+                </div>
+
+                <h3>Configuration Storage</h3>
+
+                <p>Client configuration is stored in <code>~/.aldersync/config.json</code>:</p>
+
+                <div class="code-example">
+{
+  <span class="code-string">"server_url"</span>: <span class="code-string">"http://church-nas.local"</span>,
+  <span class="code-string">"server_port"</span>: 8000,
+  <span class="code-string">"verify_ssl"</span>: false,
+  <span class="code-string">"username"</span>: <span class="code-string">"volunteer1"</span>,
+  <span class="code-string">"default_service"</span>: <span class="code-string">"Contemporary"</span>,
+  <span class="code-string">"log_level"</span>: <span class="code-string">"INFO"</span>,
+  <span class="code-string">"log_retention_days"</span>: 7
+}
+                </div>
+
+                <p>Passwords are stored in OS credential store:</p>
+
+                <div class="code-example">
+<span class="code-keyword">import</span> keyring
+
+<span class="code-comment"># Store password</span>
+keyring.set_password(<span class="code-string">"aldersync"</span>, username, password)
+
+<span class="code-comment"># Retrieve password</span>
+password = keyring.get_password(<span class="code-string">"aldersync"</span>, username)
+                </div>
+            </div>
+
+            <!-- Section 10: Using Claude Code -->
+            <div class="docs-section" id="claude">
+                <h2>10. Using Claude Code</h2>
+
+                <p>AlderSync was developed with Claude Code (claude.ai/code), an AI assistant that can read, understand, and modify codebases. The project includes <code>CLAUDE.md</code> with instructions for Claude.</p>
+
+                <h3>What is Claude Code?</h3>
+
+                <p>Claude Code is an AI assistant that:</p>
+                <ul>
+                    <li>Reads and understands entire codebases</li>
+                    <li>Writes, edits, and refactors code</li>
+                    <li>Executes commands (git, tests, builds)</li>
+                    <li>Follows project-specific guidelines (via CLAUDE.md)</li>
+                    <li>Can work autonomously on multi-step tasks</li>
+                </ul>
+
+                <h3>Getting Started with Claude Code</h3>
+
+                <p><span class="step-number">1</span> Access Claude Code at <a href="https://claude.com/code" target="_blank">claude.com/code</a></p>
+                <p><span class="step-number">2</span> Open the AlderSync project directory</p>
+                <p><span class="step-number">3</span> Claude automatically reads <code>CLAUDE.md</code> for project instructions</p>
+                <p><span class="step-number">4</span> Start making requests in natural language</p>
+
+                <h3>Example Requests</h3>
+
+                <div class="tip-box">
+                    <p><strong>"Add a new endpoint to list users by role"</strong></p>
+                    <p>Claude will:</p>
+                    <ul>
+                        <li>Create a new route in <code>routes/admin/users.py</code></li>
+                        <li>Add appropriate database query</li>
+                        <li>Include authentication/authorization</li>
+                        <li>Follow existing code patterns</li>
+                        <li>Test the endpoint</li>
+                        <li>Commit the changes</li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <p><strong>"Create a test script to verify file versioning works correctly"</strong></p>
+                    <p>Claude will:</p>
+                    <ul>
+                        <li>Create a test script in <code>Server/tests/</code></li>
+                        <li>Upload multiple versions of a file</li>
+                        <li>Verify revisions are created correctly</li>
+                        <li>Check revision cleanup when limit exceeded</li>
+                        <li>Run the test and fix any issues</li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <p><strong>"Update the Docker deployment to include a new environment variable for email notifications"</strong></p>
+                    <p>Claude will:</p>
+                    <ul>
+                        <li>Update <code>Dockerfile</code> and <code>docker-compose.yml</code></li>
+                        <li>Add environment variable handling in server code</li>
+                        <li>Update <code>DOCKER.md</code> documentation</li>
+                        <li>Test the change</li>
+                        <li>Commit with appropriate message</li>
+                    </ul>
+                </div>
+
+                <h3>Best Practices with Claude Code</h3>
+
+                <ul>
+                    <li><strong>Be specific:</strong> "Add a new permission called 'can_export_data' and apply it to the /files/export endpoint"</li>
+                    <li><strong>Reference existing code:</strong> "Add a new route similar to /admin/users but for managing service types"</li>
+                    <li><strong>Ask for tests:</strong> "Create this feature and write a test to verify it works"</li>
+                    <li><strong>Request documentation updates:</strong> "Update the API documentation to include this new endpoint"</li>
+                    <li><strong>Let Claude test:</strong> "Test this change and fix any issues you find"</li>
+                </ul>
+
+                <h3>CLAUDE.md Guidelines</h3>
+
+                <p>The <code>CLAUDE.md</code> file contains project-specific instructions. Key guidelines:</p>
+
+                <table>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Nouns for types/variables</td>
+                        <td>Clear, semantic naming</td>
+                    </tr>
+                    <tr>
+                        <td>Verbs for methods</td>
+                        <td>Descriptive function names</td>
+                    </tr>
+                    <tr>
+                        <td>Questions for booleans</td>
+                        <td>Self-documenting boolean functions</td>
+                    </tr>
+                    <tr>
+                        <td>Never plain text passwords</td>
+                        <td>Security requirement</td>
+                    </tr>
+                    <tr>
+                        <td>Cross-platform compatibility</td>
+                        <td>Works on Windows, Mac, Linux</td>
+                    </tr>
+                    <tr>
+                        <td>Avoid token duplication</td>
+                        <td>Code reusability</td>
+                    </tr>
+                    <tr>
+                        <td>One class per file</td>
+                        <td>Code organization</td>
+                    </tr>
+                    <tr>
+                        <td>Detailed docstrings</td>
+                        <td>Code documentation</td>
+                    </tr>
+                    <tr>
+                        <td>Comprehensive logging</td>
+                        <td>Debugging and user visibility</td>
+                    </tr>
+                </table>
+
+                <h3>Testing Changes</h3>
+
+                <p>Claude can run tests directly:</p>
+
+                <div class="code-example">
+You: "Test the new permission system I just added"
+
+Claude: Running test script...
+<span class="code-comment"># Claude executes tests, shows output, fixes any failures</span>
+
+All tests passed! The new permission system is working correctly.
+                </div>
+
+                <h3>Common Tasks with Claude</h3>
+
+                <table>
+                    <tr>
+                        <th>Task</th>
+                        <th>Example Request</th>
+                    </tr>
+                    <tr>
+                        <td>Add new API endpoint</td>
+                        <td>"Create a /files/search endpoint that searches files by name pattern"</td>
+                    </tr>
+                    <tr>
+                        <td>Refactor code</td>
+                        <td>"Extract the file comparison logic into a separate utility function"</td>
+                    </tr>
+                    <tr>
+                        <td>Fix bug</td>
+                        <td>"The file upload is failing with large files. Investigate and fix."</td>
+                    </tr>
+                    <tr>
+                        <td>Add feature</td>
+                        <td>"Add email notifications when operations complete"</td>
+                    </tr>
+                    <tr>
+                        <td>Update documentation</td>
+                        <td>"Update the admin docs to explain the new backup feature"</td>
+                    </tr>
+                    <tr>
+                        <td>Build Docker image</td>
+                        <td>"Build and export the Docker image for Portainer deployment"</td>
+                    </tr>
+                </table>
+
+                <div class="warning-box">
+                    <strong>Always Review Changes:</strong> While Claude is highly capable, always review code changes before committing to production. Claude follows CLAUDE.md guidelines but human oversight is important.
+                </div>
+            </div>
+
+            <!-- Section 11: Development Workflow -->
+            <div class="docs-section" id="development">
+                <h2>11. Development Workflow</h2>
+
+                <h3>Setting Up Development Environment</h3>
+
+                <p><span class="step-number">1</span> Clone the repository</p>
+
+                <div class="code-example">
+git clone https://github.com/your-org/AlderSync.git
+cd AlderSync
+                </div>
+
+                <p><span class="step-number">2</span> Set up Server virtual environment</p>
+
+                <div class="code-example">
+cd Server
+python3 -m venv venv
+source venv/bin/activate  <span class="code-comment"># On Windows: venv\Scripts\activate</span>
+pip install -r requirements.txt
+                </div>
+
+                <p><span class="step-number">3</span> Set up Client virtual environment</p>
+
+                <div class="code-example">
+cd ../Client
+python3 -m venv venv
+source venv/bin/activate  <span class="code-comment"># On Windows: venv\Scripts\activate</span>
+pip install -r requirements.txt
+                </div>
+
+                <p><span class="step-number">4</span> Initialize the database</p>
+
+                <div class="code-example">
+cd ../Server
+python database.py
+<span class="code-comment"># Note the generated admin password!</span>
+                </div>
+
+                <h3>Running the Server Locally</h3>
+
+                <div class="code-example">
+cd Server
+source venv/bin/activate
+python server.py
+
+<span class="code-comment"># Or use uvicorn directly for auto-reload:</span>
+uvicorn server:app --reload --host 0.0.0.0 --port 8000
+                </div>
+
+                <h3>Running the Client Locally</h3>
+
+                <div class="code-example">
+cd Client
+source venv/bin/activate
+python client.py  <span class="code-comment"># GUI mode</span>
+python client.py pull  <span class="code-comment"># CLI mode</span>
+                </div>
+
+                <h3>Git Workflow</h3>
+
+                <p>AlderSync follows a simple git workflow:</p>
+
+                <p><span class="step-number">1</span> Make changes</p>
+                <p><span class="step-number">2</span> Test changes thoroughly</p>
+                <p><span class="step-number">3</span> Stage and commit:</p>
+
+                <div class="code-example">
+git add Server/routes/admin/new_feature.py
+git commit -m <span class="code-string">"Add new feature for X
+
+Implements Y functionality as requested in task Z.
+
+Generated with Claude Code
+Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;"</span>
+                </div>
+
+                <p><span class="step-number">4</span> Push to remote (if configured)</p>
+
+                <div class="code-example">
+git push origin master
+                </div>
+
+                <h3>Code Review Checklist</h3>
+
+                <p>Before committing changes:</p>
+
+                <ul>
+                    <li>✅ Code follows CLAUDE.md naming conventions</li>
+                    <li>✅ Functions have clear docstrings</li>
+                    <li>✅ No passwords or sensitive data in code</li>
+                    <li>✅ Changes are tested (manually or with scripts)</li>
+                    <li>✅ No syntax errors or import issues</li>
+                    <li>✅ Logging added for major operations</li>
+                    <li>✅ Error handling is appropriate</li>
+                    <li>✅ Cross-platform compatibility considered</li>
+                </ul>
+            </div>
+
+            <!-- Section 12: Testing -->
+            <div class="docs-section" id="testing">
+                <h2>12. Testing</h2>
+
+                <h3>Test Structure</h3>
+
+                <p>Test scripts are located in:</p>
+                <ul>
+                    <li><code>Server/tests/</code> - Server API and functionality tests</li>
+                    <li><code>Client/tests/</code> - Client functionality tests</li>
+                </ul>
+
+                <h3>Test Credentials</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                    </tr>
+                    <tr>
+                        <td>Server Admin</td>
+                        <td><code>admin</code></td>
+                        <td><code>HdXn5$qtdMU@</code></td>
+                    </tr>
+                    <tr>
+                        <td>Test Client User</td>
+                        <td><code>testuser1</code></td>
+                        <td><code>thisisjusttemporaryiknow</code></td>
+                    </tr>
+                </table>
+
+                <h3>Running Server Tests</h3>
+
+                <div class="code-example">
+cd Server
+source venv/bin/activate
+
+<span class="code-comment"># Run specific test</span>
+python tests/test_authentication.py
+
+<span class="code-comment"># Run all tests</span>
+<span class="code-keyword">for</span> test <span class="code-keyword">in</span> tests/test_*.py; <span class="code-keyword">do</span>
+    python <span class="code-string">"$test"</span>
+<span class="code-keyword">done</span>
+                </div>
+
+                <h3>Example Test Script</h3>
+
+                <div class="code-example">
+<span class="code-comment">#!/usr/bin/env python3</span>
+<span class="code-string">"""
+Test authentication endpoints
+"""</span>
+
+<span class="code-keyword">import</span> requests
+
+BASE_URL = <span class="code-string">"http://localhost:8000"</span>
+
+<span class="code-keyword">def</span> <span class="code-function">test_login</span>():
+    <span class="code-string">"""Test successful login"""</span>
+    response = requests.post(
+        <span class="code-string">f"{BASE_URL}/auth/login"</span>,
+        json={<span class="code-string">"username"</span>: <span class="code-string">"admin"</span>, <span class="code-string">"password"</span>: <span class="code-string">"HdXn5$qtdMU@"</span>}
+    )
+
+    <span class="code-keyword">assert</span> response.status_code == 200, <span class="code-string">f"Login failed: {response.text}"</span>
+    data = response.json()
+    <span class="code-keyword">assert</span> <span class="code-string">"access_token"</span> <span class="code-keyword">in</span> data
+    print(<span class="code-string">"✓ Login successful"</span>)
+
+    <span class="code-keyword">return</span> data[<span class="code-string">"access_token"</span>]
+
+<span class="code-keyword">def</span> <span class="code-function">test_invalid_login</span>():
+    <span class="code-string">"""Test failed login with wrong password"""</span>
+    response = requests.post(
+        <span class="code-string">f"{BASE_URL}/auth/login"</span>,
+        json={<span class="code-string">"username"</span>: <span class="code-string">"admin"</span>, <span class="code-string">"password"</span>: <span class="code-string">"wrongpassword"</span>}
+    )
+
+    <span class="code-keyword">assert</span> response.status_code == 401, <span class="code-string">"Invalid login should fail"</span>
+    print(<span class="code-string">"✓ Invalid login correctly rejected"</span>)
+
+<span class="code-keyword">if</span> __name__ == <span class="code-string">"__main__"</span>:
+    print(<span class="code-string">"Testing authentication..."</span>)
+    test_login()
+    test_invalid_login()
+    print(<span class="code-string">"\nAll tests passed!"</span>)
+                </div>
+
+                <h3>Manual Testing Checklist</h3>
+
+                <p>For major changes, manually test:</p>
+
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Test Steps</th>
+                    </tr>
+                    <tr>
+                        <td>User Login</td>
+                        <td>Login with valid/invalid credentials, verify token</td>
+                    </tr>
+                    <tr>
+                        <td>Pull Operation</td>
+                        <td>Upload files to server, perform pull from client, verify files downloaded</td>
+                    </tr>
+                    <tr>
+                        <td>Push Operation</td>
+                        <td>Modify local files, push to server, verify files uploaded and versioned</td>
+                    </tr>
+                    <tr>
+                        <td>Reconcile</td>
+                        <td>Modify files both locally and remotely, reconcile, resolve conflicts</td>
+                    </tr>
+                    <tr>
+                        <td>Folder Swap</td>
+                        <td>Swap between Contemporary and Traditional, verify folders renamed correctly</td>
+                    </tr>
+                    <tr>
+                        <td>Permissions</td>
+                        <td>Create users with different roles, verify permission enforcement</td>
+                    </tr>
+                    <tr>
+                        <td>Revisions</td>
+                        <td>Upload same file multiple times, verify revisions created and cleaned up</td>
+                    </tr>
+                    <tr>
+                        <td>Admin Cancellation</td>
+                        <td>Start operation from client, cancel from admin interface, verify rollback</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Section 13: Building & Deployment -->
+            <div class="docs-section" id="deployment">
+                <h2>13. Building & Deployment</h2>
+
+                <h3>Building Client Executables</h3>
+
+                <p>Use PyInstaller to create standalone executables:</p>
+
+                <p><strong>Windows:</strong></p>
+
+                <div class="code-example">
+cd Client
+venv\Scripts\activate
+pyinstaller aldersync.spec
+
+<span class="code-comment"># Output: dist/aldersync.exe</span>
+                </div>
+
+                <p><strong>Mac:</strong></p>
+
+                <div class="code-example">
+cd Client
+source venv/bin/activate
+pyinstaller aldersync.spec
+
+<span class="code-comment"># Output: dist/aldersync.app</span>
+                </div>
+
+                <h3>Building Docker Image</h3>
+
+                <p><strong>Manual Build:</strong></p>
+
+                <div class="code-example">
+cd Server
+docker build -t aldersync-server:latest .
+                </div>
+
+                <p><strong>Automated Build and Export:</strong></p>
+
+                <div class="code-example">
+cd Server
+python update_docker_deployment.py --export --version 1.0.0
+
+<span class="code-comment"># Creates: portainer-deployment/aldersync-server-image-1.0.0.tar</span>
+                </div>
+
+                <h3>Deployment Checklist</h3>
+
+                <p>Before deploying to production:</p>
+
+                <ul>
+                    <li>✅ All tests pass</li>
+                    <li>✅ Documentation updated</li>
+                    <li>✅ Version number incremented</li>
+                    <li>✅ Backup current production data</li>
+                    <li>✅ Docker image built and tested</li>
+                    <li>✅ Client executables built for all platforms</li>
+                    <li>✅ Deployment guide reviewed (DOCKER.md, PORTAINER-README.md)</li>
+                    <li>✅ Users notified of planned downtime (if applicable)</li>
+                </ul>
+
+                <h3>Version Numbering</h3>
+
+                <p>AlderSync uses semantic versioning: <code>MAJOR.MINOR.PATCH</code></p>
+
+                <ul>
+                    <li><strong>MAJOR:</strong> Breaking changes, incompatible API changes</li>
+                    <li><strong>MINOR:</strong> New features, backwards-compatible</li>
+                    <li><strong>PATCH:</strong> Bug fixes, no new features</li>
+                </ul>
+
+                <p>Examples:</p>
+                <ul>
+                    <li><code>1.0.0</code> - Initial release</li>
+                    <li><code>1.1.0</code> - Added email notifications</li>
+                    <li><code>1.1.1</code> - Fixed file upload bug</li>
+                    <li><code>2.0.0</code> - Changed API authentication method (breaking)</li>
+                </ul>
+
+                <h3>Uploading Client to Downloads Page</h3>
+
+                <p><span class="step-number">1</span> Build client executables</p>
+                <p><span class="step-number">2</span> Log in to admin interface</p>
+                <p><span class="step-number">3</span> Navigate to Downloads page</p>
+                <p><span class="step-number">4</span> Click "Upload Client"</p>
+                <p><span class="step-number">5</span> Select platform (Windows/Mac)</p>
+                <p><span class="step-number">6</span> Enter version number</p>
+                <p><span class="step-number">7</span> Upload executable file</p>
+                <p><span class="step-number">8</span> Set as active version</p>
+            </div>
+
+            <hr style="margin: 40px 0;">
+
+            <div class="info-box">
+                <strong>Additional Resources:</strong>
+                <ul>
+                    <li><a href="/admin/docs/user">User Documentation</a> - For end users</li>
+                    <li><a href="/admin/docs/admin">Administrative Documentation</a> - For server admins</li>
+                    <li><strong>Project Files:</strong>
+                        <ul>
+                            <li><code>CLAUDE.md</code> - Claude Code development instructions</li>
+                            <li><code>Plan.md</code> - Complete implementation plan and task list</li>
+                            <li><code>Refinements.md</code> - Future improvements and ideas</li>
+                        </ul>
+                    </li>
+                    <li><strong>Interactive API Docs:</strong> <a href="/docs" target="_blank">/docs</a> (Swagger UI) and <a href="/redoc" target="_blank">/redoc</a> (ReDoc)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

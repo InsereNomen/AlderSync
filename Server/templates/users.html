@@ -1,0 +1,1227 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - AlderSync Admin{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+    <div class="page-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h1>User & Role Management</h1>
+            <div id="tab-buttons" style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" id="users-create-btn" onclick="showCreateUserModal()">Create New User</button>
+                <button class="btn btn-primary" id="roles-create-btn" style="display: none;" onclick="showCreateRoleModal()">Create New Role</button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('users')">Users</button>
+            <button class="tab-btn" onclick="switchTab('roles')">Roles</button>
+        </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="users-tab" class="tab-content active">
+        <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">All Users</h2>
+            <div class="search-box">
+                <input type="text" id="user-search" placeholder="Search users by name or role..." onkeyup="filterUsers()">
+            </div>
+        </div>
+        <div class="card-content">
+            {% if users %}
+            <div class="table-container">
+                <table class="table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr data-username="{{ user.username }}" data-user-id="{{ user.user_id }}" data-role="{{ user.role.role_name if user.role else 'None' }}">
+                            <td class="font-medium">{{ user.username }}</td>
+                            <td>
+                                {% if user.role %}
+                                    {% if user.role.role_name == "Admin" %}
+                                    <span class="badge badge-admin">{{ user.role.role_name }}</span>
+                                    {% elif user.role.role_name == "Standard User" %}
+                                    <span class="badge badge-standard">{{ user.role.role_name }}</span>
+                                    {% elif user.role.role_name == "Read-Only" %}
+                                    <span class="badge badge-readonly">{{ user.role.role_name }}</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">{{ user.role.role_name }}</span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="badge badge-secondary">No Role</span>
+                                {% endif %}
+                            </td>
+                            <td class="utc-time" data-utc="{{ user.created_at.isoformat() }}Z">{{ user.created_at }}</td>
+                            <td class="utc-time" data-utc="{% if user.last_login %}{{ user.last_login.isoformat() }}Z{% endif %}">{{ user.last_login if user.last_login else "Never" }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-primary" onclick="showEditRoleModal('{{ user.username }}', {{ user.role_id if user.role_id else 'null' }})">Edit Role</button>
+                                    {% if user.is_active %}
+                                    <button class="btn btn-sm btn-warning" onclick="toggleUserStatus('{{ user.username }}', false)" {% if user.username == username %}disabled{% endif %}>Disable</button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-success" onclick="toggleUserStatus('{{ user.username }}', true)" {% if user.username == username %}disabled{% endif %}>Enable</button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-secondary" onclick="showResetPasswordModal('{{ user.username }}')">Reset Password</button>
+                                    <button class="btn btn-sm btn-danger" onclick="showDeleteUserModal('{{ user.username }}', {{ user.user_id }})" {% if user.username == username %}disabled{% endif %}>Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No users found</p>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+    <!-- End Users Tab -->
+
+    <!-- Roles Tab -->
+    <div id="roles-tab" class="tab-content" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">All Roles</h2>
+            </div>
+            <div class="card-content">
+                <div class="table-container">
+                    <table class="table" id="roles-table">
+                        <thead>
+                            <tr>
+                                <th>Role Name</th>
+                                <th>Description</th>
+                                <th>Permissions</th>
+                                <th>Users</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roles-table-body">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Roles Tab -->
+</div>
+
+<!-- Create User Modal -->
+<div id="create-user-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create New User</h2>
+            <span class="modal-close" onclick="closeModal('create-user-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="create-user-form" onsubmit="createUser(event)">
+                <div class="form-group">
+                    <label for="new-username">Username</label>
+                    <input type="text" id="new-username" name="username" required minlength="3" maxlength="50" class="form-control">
+                    <small class="form-text">3-50 characters, alphanumeric and underscores only</small>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Temporary Password</label>
+                    <input type="text" id="new-password" name="password" required minlength="8" class="form-control">
+                    <small class="form-text">Minimum 8 characters. User will be prompted to change on first login.</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="generatePassword()">Generate Random Password</button>
+                </div>
+                <div class="form-group">
+                    <label for="new-user-role">Role</label>
+                    <select id="new-user-role" name="role_id" class="form-control">
+                        {% for role in roles %}
+                        <option value="{{ role.role_id }}" {% if role.role_name == "Standard User" %}selected{% endif %}>
+                            {{ role.role_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text">Assign a role to this user. Default is Standard User.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-user-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div id="reset-password-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Reset Password</h2>
+            <span class="modal-close" onclick="closeModal('reset-password-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="reset-password-form" onsubmit="resetPassword(event)">
+                <input type="hidden" id="reset-username" name="username">
+                <p style="margin-bottom: 1rem;">Reset password for <strong id="reset-username-display"></strong></p>
+                <div class="form-group">
+                    <label for="reset-new-password">New Temporary Password</label>
+                    <input type="text" id="reset-new-password" name="password" required minlength="8" class="form-control">
+                    <small class="form-text">Minimum 8 characters. User will need to change on next login.</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="generateResetPassword()">Generate Random Password</button>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('reset-password-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div id="edit-role-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit User Role</h2>
+            <span class="modal-close" onclick="closeModal('edit-role-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="edit-role-form" onsubmit="updateUserRole(event)">
+                <input type="hidden" id="edit-role-username" name="username">
+                <p style="margin-bottom: 1rem;">Change role for <strong id="edit-role-username-display"></strong></p>
+                <div class="form-group">
+                    <label for="edit-role-select">New Role</label>
+                    <select id="edit-role-select" name="role_id" class="form-control" required>
+                        {% for role in roles %}
+                        <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text">Select the new role for this user.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-role-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create Role Modal -->
+<div id="create-role-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create New Role</h2>
+            <span class="modal-close" onclick="closeModal('create-role-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="create-role-form" onsubmit="createRole(event)">
+                <div class="form-group">
+                    <label for="new-role-name">Role Name</label>
+                    <input type="text" id="new-role-name" name="role_name" required minlength="3" maxlength="50" class="form-control">
+                    <small class="form-text">3-50 characters, letters, numbers, spaces, hyphens, and underscores</small>
+                </div>
+                <div class="form-group">
+                    <label for="new-role-description">Description</label>
+                    <textarea id="new-role-description" name="description" rows="3" class="form-control" placeholder="Optional description of this role"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Permissions</label>
+                    <div class="permission-checkboxes">
+                        <div class="permission-item">
+                            <input type="checkbox" id="new-perm-admin" name="permissions" value="admin" onchange="handleAdminPermission(this, 'new')">
+                            <label for="new-perm-admin">Admin (Full access to all features)</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="new-perm-can-push" name="permissions" value="can_push">
+                            <label for="new-perm-can-push">Can Push (Upload files to server)</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="new-perm-can-reconcile" name="permissions" value="can_reconcile">
+                            <label for="new-perm-can-reconcile">Can Reconcile (Sync and resolve conflicts)</label>
+                        </div>
+                    </div>
+                    <small class="form-text">Select permissions for this role. All users can Pull (download) files.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-role-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div id="edit-role-modal-role" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Role</h2>
+            <span class="modal-close" onclick="closeModal('edit-role-modal-role')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="edit-role-form-role" onsubmit="updateRole(event)">
+                <input type="hidden" id="edit-role-id" name="role_id">
+                <div class="form-group">
+                    <label for="edit-role-name">Role Name</label>
+                    <input type="text" id="edit-role-name" name="role_name" required minlength="3" maxlength="50" class="form-control">
+                    <small class="form-text">3-50 characters, letters, numbers, spaces, hyphens, and underscores</small>
+                </div>
+                <div class="form-group">
+                    <label for="edit-role-description">Description</label>
+                    <textarea id="edit-role-description" name="description" rows="3" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Permissions</label>
+                    <div class="permission-checkboxes">
+                        <div class="permission-item">
+                            <input type="checkbox" id="edit-perm-admin" name="permissions" value="admin" onchange="handleAdminPermission(this, 'edit')">
+                            <label for="edit-perm-admin">Admin (Full access to all features)</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="edit-perm-can-push" name="permissions" value="can_push">
+                            <label for="edit-perm-can-push">Can Push (Upload files to server)</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="edit-perm-can-reconcile" name="permissions" value="can_reconcile">
+                            <label for="edit-perm-can-reconcile">Can Reconcile (Sync and resolve conflicts)</label>
+                        </div>
+                    </div>
+                    <small class="form-text">Select permissions for this role. All users can Pull (download) files.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-role-modal-role')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Role Confirmation Modal -->
+<div id="delete-role-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Delete Role</h2>
+            <span class="modal-close" onclick="closeModal('delete-role-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="delete-role-id">
+            <p style="margin-bottom: 1rem;">Are you sure you want to delete the role <strong id="delete-role-name-display"></strong>?</p>
+            <p style="color: #ef4444; font-size: 0.875rem;">This action cannot be undone.</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-role-modal')">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteRole()">Delete Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div id="delete-user-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Delete User</h2>
+            <span class="modal-close" onclick="closeModal('delete-user-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="delete-user-id">
+            <p style="margin-bottom: 1rem;">Are you sure you want to delete user <strong id="delete-user-name-display"></strong>?</p>
+            <p style="color: #ef4444; font-size: 0.875rem;">This action cannot be undone. All data associated with this user will be permanently deleted.</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-user-modal')">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">Delete User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Notification -->
+<div id="notification" class="notification" style="display: none;"></div>
+
+<script>
+    // Modal management
+    function showCreateUserModal() {
+        document.getElementById('create-user-modal').style.display = 'flex';
+        document.getElementById('new-username').focus();
+    }
+
+    function showResetPasswordModal(username) {
+        document.getElementById('reset-username').value = username;
+        document.getElementById('reset-username-display').textContent = username;
+        document.getElementById('reset-password-modal').style.display = 'flex';
+        document.getElementById('reset-new-password').focus();
+    }
+
+    function showEditRoleModal(username, currentRoleId) {
+        document.getElementById('edit-role-username').value = username;
+        document.getElementById('edit-role-username-display').textContent = username;
+
+        // Set the current role in the dropdown
+        const roleSelect = document.getElementById('edit-role-select');
+        if (currentRoleId) {
+            roleSelect.value = currentRoleId;
+        }
+
+        document.getElementById('edit-role-modal').style.display = 'flex';
+        roleSelect.focus();
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        // Clear form inputs
+        const form = document.querySelector(`#${modalId} form`);
+        if (form) form.reset();
+    }
+
+    // Password generation
+    function generatePassword() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < 12; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('new-password').value = password;
+    }
+
+    function generateResetPassword() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < 12; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('reset-new-password').value = password;
+    }
+
+    // User search/filter
+    function filterUsers() {
+        const searchTerm = document.getElementById('user-search').value.toLowerCase();
+        const table = document.getElementById('users-table');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const username = rows[i].getAttribute('data-username').toLowerCase();
+            const role = rows[i].getAttribute('data-role').toLowerCase();
+
+            // Search in both username and role
+            if (username.includes(searchTerm) || role.includes(searchTerm)) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification notification-${type}`;
+        notification.style.display = 'block';
+
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 5000);
+    }
+
+    // Create user
+    async function createUser(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/admin/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: formData.get('username'),
+                    password: formData.get('password'),
+                    role_id: parseInt(formData.get('role_id'))
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`User "${data.username}" created successfully!`);
+                closeModal('create-user-modal');
+                // Reload page to show new user
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification(data.detail || 'Failed to create user', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to create user', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Toggle user status
+    async function toggleUserStatus(username, enable) {
+        const action = enable ? 'enable' : 'disable';
+        const confirmMsg = `Are you sure you want to ${action} user "${username}"?`;
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/api/users/${encodeURIComponent(username)}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_active: enable })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`User "${username}" ${action}d successfully!`);
+                // Reload page to show updated status
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification(data.detail || `Failed to ${action} user`, 'error');
+            }
+        } catch (error) {
+            showNotification(`Network error: Failed to ${action} user`, 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Reset password
+    async function resetPassword(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const username = formData.get('username');
+        const password = formData.get('password');
+
+        try {
+            const response = await fetch(`/admin/api/users/${encodeURIComponent(username)}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ new_password: password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`Password reset for "${username}". Temporary password: ${password}`, 'success');
+                closeModal('reset-password-modal');
+            } else {
+                showNotification(data.detail || 'Failed to reset password', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to reset password', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Update user role
+    async function updateUserRole(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const username = formData.get('username');
+        const roleId = parseInt(formData.get('role_id'));
+
+        try {
+            // Get user_id from username
+            const userRow = document.querySelector(`tr[data-username="${username}"]`);
+            if (!userRow) {
+                showNotification('User not found', 'error');
+                return;
+            }
+
+            const userId = userRow.getAttribute('data-user-id');
+
+            // Call the API endpoint to update role
+            const response = await fetch(`/admin/api/users/${userId}/role`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ role_id: roleId })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`Role updated for "${username}"`, 'success');
+                closeModal('edit-role-modal');
+                // Reload page to show updated role
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification(data.detail || 'Failed to update role', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to update role', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Convert UTC times to local timezone
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeElements = document.querySelectorAll('.utc-time');
+
+        timeElements.forEach(element => {
+            const utcTime = element.getAttribute('data-utc');
+            if (utcTime && utcTime !== '') {
+                try {
+                    const date = new Date(utcTime);
+
+                    const options = {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+
+                    const localTime = date.toLocaleString(undefined, options);
+                    element.textContent = localTime;
+                } catch (e) {
+                    console.error('Error converting time:', e);
+                }
+            }
+        });
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    }
+
+    // ==================== Tab Management ====================
+
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected tab
+        document.getElementById(tabName + '-tab').style.display = 'block';
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+
+        // Show/hide appropriate create button
+        if (tabName === 'users') {
+            document.getElementById('users-create-btn').style.display = 'block';
+            document.getElementById('roles-create-btn').style.display = 'none';
+        } else if (tabName === 'roles') {
+            document.getElementById('users-create-btn').style.display = 'none';
+            document.getElementById('roles-create-btn').style.display = 'block';
+            // Load roles when switching to roles tab
+            loadRoles();
+        }
+    }
+
+    // ==================== Role Management ====================
+
+    let rolesData = [];
+
+    async function loadRoles() {
+        try {
+            const response = await fetch('/admin/api/roles');
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                rolesData = data.roles;
+                renderRolesTable();
+            } else {
+                showNotification('Failed to load roles', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to load roles', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    function renderRolesTable() {
+        const tbody = document.getElementById('roles-table-body');
+        tbody.innerHTML = '';
+
+        if (rolesData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No roles found</td></tr>';
+            return;
+        }
+
+        rolesData.forEach(role => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-role-id', role.role_id);
+            row.setAttribute('data-is-system', role.is_system_role);
+
+            // Role name with badge
+            const nameCell = document.createElement('td');
+            nameCell.className = 'font-medium';
+            if (role.is_system_role) {
+                nameCell.innerHTML = `${role.role_name} <span class="badge badge-secondary" style="font-size: 0.75rem;">System</span>`;
+            } else {
+                nameCell.textContent = role.role_name;
+            }
+
+            // Description
+            const descCell = document.createElement('td');
+            descCell.textContent = role.description || '-';
+
+            // Permissions
+            const permCell = document.createElement('td');
+            if (role.permissions && role.permissions.length > 0) {
+                const permBadges = role.permissions.map(p => {
+                    let badgeClass = 'badge badge-secondary';
+                    if (p === 'admin') badgeClass = 'badge badge-admin';
+                    else if (p === 'can_push') badgeClass = 'badge badge-primary';
+                    else if (p === 'can_reconcile') badgeClass = 'badge badge-primary';
+                    return `<span class="${badgeClass}" style="margin-right: 0.25rem;">${p.replace('_', ' ')}</span>`;
+                }).join(' ');
+                permCell.innerHTML = permBadges;
+            } else {
+                permCell.innerHTML = '<span class="badge badge-secondary">None</span>';
+            }
+
+            // User count
+            const userCountCell = document.createElement('td');
+            userCountCell.textContent = role.user_count || 0;
+
+            // Actions
+            const actionsCell = document.createElement('td');
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'action-buttons';
+
+            if (!role.is_system_role) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-sm btn-primary';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = () => showRoleEditModal(role);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-sm btn-danger';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => showDeleteRoleModal(role);
+
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+            } else {
+                actionsDiv.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.875rem;">Protected</span>';
+            }
+
+            actionsCell.appendChild(actionsDiv);
+
+            row.appendChild(nameCell);
+            row.appendChild(descCell);
+            row.appendChild(permCell);
+            row.appendChild(userCountCell);
+            row.appendChild(actionsCell);
+
+            tbody.appendChild(row);
+        });
+    }
+
+    // ==================== Role Modal Functions ====================
+
+    function showCreateRoleModal() {
+        document.getElementById('create-role-modal').style.display = 'flex';
+        document.getElementById('new-role-name').focus();
+    }
+
+    function showRoleEditModal(role) {
+        document.getElementById('edit-role-id').value = role.role_id;
+        document.getElementById('edit-role-name').value = role.role_name;
+        document.getElementById('edit-role-description').value = role.description || '';
+
+        // Set permissions
+        document.getElementById('edit-perm-admin').checked = role.permissions.includes('admin');
+        document.getElementById('edit-perm-can-push').checked = role.permissions.includes('can_push');
+        document.getElementById('edit-perm-can-reconcile').checked = role.permissions.includes('can_reconcile');
+
+        document.getElementById('edit-role-modal-role').style.display = 'flex';
+        document.getElementById('edit-role-name').focus();
+    }
+
+    function showDeleteRoleModal(role) {
+        if (role.user_count > 0) {
+            showNotification(`Cannot delete role "${role.role_name}": ${role.user_count} user(s) are assigned to this role`, 'error');
+            return;
+        }
+
+        document.getElementById('delete-role-id').value = role.role_id;
+        document.getElementById('delete-role-name-display').textContent = role.role_name;
+        document.getElementById('delete-role-modal').style.display = 'flex';
+    }
+
+    // Handle admin permission checkbox (when admin is checked, disable other permissions)
+    function handleAdminPermission(checkbox, prefix) {
+        if (checkbox.checked) {
+            // If admin is checked, check and disable other permissions
+            document.getElementById(`${prefix}-perm-can-push`).checked = true;
+            document.getElementById(`${prefix}-perm-can-push`).disabled = true;
+            document.getElementById(`${prefix}-perm-can-reconcile`).checked = true;
+            document.getElementById(`${prefix}-perm-can-reconcile`).disabled = true;
+        } else {
+            // If admin is unchecked, enable other permissions
+            document.getElementById(`${prefix}-perm-can-push`).disabled = false;
+            document.getElementById(`${prefix}-perm-can-reconcile`).disabled = false;
+        }
+    }
+
+    // ==================== Role CRUD Operations ====================
+
+    async function createRole(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Collect checked permissions
+        const permissions = [];
+        form.querySelectorAll('input[name="permissions"]:checked').forEach(checkbox => {
+            permissions.push(checkbox.value);
+        });
+
+        try {
+            const response = await fetch('/admin/api/roles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    role_name: formData.get('role_name'),
+                    description: formData.get('description') || null,
+                    permissions: permissions
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`Role "${data.role_name}" created successfully!`);
+                closeModal('create-role-modal');
+                loadRoles(); // Reload roles table
+            } else {
+                showNotification(data.detail || 'Failed to create role', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to create role', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    async function updateRole(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const roleId = formData.get('role_id');
+
+        // Collect checked permissions
+        const permissions = [];
+        form.querySelectorAll('input[name="permissions"]:checked').forEach(checkbox => {
+            permissions.push(checkbox.value);
+        });
+
+        try {
+            // Update role name and description
+            const updateResponse = await fetch(`/admin/api/roles/${roleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    role_name: formData.get('role_name'),
+                    description: formData.get('description') || null
+                })
+            });
+
+            if (!updateResponse.ok) {
+                const updateData = await updateResponse.json();
+                showNotification(updateData.detail || 'Failed to update role', 'error');
+                return;
+            }
+
+            // Update permissions
+            const permResponse = await fetch(`/admin/api/roles/${roleId}/permissions`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    permissions: permissions
+                })
+            });
+
+            const permData = await permResponse.json();
+
+            if (permResponse.ok) {
+                showNotification(`Role updated successfully!`);
+                closeModal('edit-role-modal-role');
+                loadRoles(); // Reload roles table
+            } else {
+                showNotification(permData.detail || 'Failed to update permissions', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to update role', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    async function confirmDeleteRole() {
+        const roleId = document.getElementById('delete-role-id').value;
+
+        try {
+            const response = await fetch(`/admin/api/roles/${roleId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification('Role deleted successfully!');
+                closeModal('delete-role-modal');
+                loadRoles(); // Reload roles table
+            } else {
+                showNotification(data.detail || 'Failed to delete role', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to delete role', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // ==================== User Deletion ====================
+
+    function showDeleteUserModal(username, userId) {
+        console.log('Delete user modal - Username:', username, 'User ID:', userId);
+        if (!userId || userId === 'null' || userId === 'undefined') {
+            showNotification('Error: User ID is missing', 'error');
+            return;
+        }
+        document.getElementById('delete-user-id').value = userId;
+        document.getElementById('delete-user-name-display').textContent = username;
+        document.getElementById('delete-user-modal').style.display = 'flex';
+    }
+
+    async function confirmDeleteUser() {
+        const userId = document.getElementById('delete-user-id').value;
+        const username = document.getElementById('delete-user-name-display').textContent;
+
+        console.log('Confirming delete for user ID:', userId, 'username:', username);
+
+        if (!userId || userId === '') {
+            showNotification('Error: User ID is missing', 'error');
+            return;
+        }
+
+        try {
+            const url = `/admin/api/users/${userId}`;
+            console.log('DELETE request to:', url);
+
+            const response = await fetch(url, {
+                method: 'DELETE'
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (response.ok) {
+                showNotification(`User '${username}' deleted successfully!`);
+                closeModal('delete-user-modal');
+                // Reload page to show updated user list
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification(data.detail || 'Failed to delete user', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to delete user', 'error');
+            console.error('Error:', error);
+        }
+    }
+</script>
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--text-color);
+    }
+
+    .modal-close {
+        font-size: 2rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: var(--text-color);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        color: #666;
+        font-size: 0.875rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-box {
+        margin-bottom: 1rem;
+    }
+
+    .search-box input {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 300px;
+        font-size: 0.875rem;
+    }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 4px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 2000;
+        max-width: 400px;
+    }
+
+    .notification-success {
+        border-left: 4px solid #10b981;
+    }
+
+    .notification-error {
+        border-left: 4px solid #ef4444;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .font-medium {
+        font-weight: 500;
+    }
+
+    /* Role badge colors - per Task 8.7 */
+    .badge-admin {
+        background-color: #ef4444;
+        color: white;
+    }
+
+    .badge-standard {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    .badge-readonly {
+        background-color: #6b7280;
+        color: white;
+    }
+
+    /* Tab Navigation - Task 8.8 */
+    .tab-nav {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab-btn {
+        padding: 0.75rem 1.5rem;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+        color: var(--primary-color);
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    .tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Permission Checkboxes */
+    .permission-checkboxes {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background-color: #f9fafb;
+        border-radius: 4px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .permission-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .permission-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .permission-item label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: normal;
+    }
+
+    .permission-item input[type="checkbox"]:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .permission-item input[type="checkbox"]:disabled + label {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Additional badge styles for permissions */
+    .badge-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    /* Disabled button styles */
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .btn-warning:disabled,
+    .btn-success:disabled,
+    .btn-danger:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+
+{% endblock %}

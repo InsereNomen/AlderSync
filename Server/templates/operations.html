@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Active Operations - AlderSync Admin{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Active Operations</h1>
+        <div class="refresh-info">Auto-refresh: Every 3 seconds</div>
+    </div>
+
+    <div class="card">
+        <div class="card-content">
+            <div class="table-container">
+                <table class="table" id="operationsTable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Operation</th>
+                            <th>Service</th>
+                            <th>Duration</th>
+                            <th>Files</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="operationsBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div id="cancelModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Cancel Operation</h2>
+            <span class="modal-close" onclick="closeCancelModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="cancelMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeCancelModal()">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmCancel()">Confirm Cancellation</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="notification" style="display: none;"></div>
+
+<script>
+    let refreshInterval;
+    let pendingCancellation = null;
+
+    // Load operations on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOperations();
+        // Auto-refresh every 3 seconds
+        refreshInterval = setInterval(loadOperations, 3000);
+    });
+
+    async function loadOperations() {
+        try {
+            const response = await fetch('/admin/api/operations/active', {
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load operations');
+            }
+
+            const data = await response.json();
+            displayOperations(data.operations);
+        } catch (error) {
+            console.error('Error loading operations:', error);
+        }
+    }
+
+    function displayOperations(operations) {
+        const tbody = document.getElementById('operationsBody');
+
+        if (operations.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="no-operations">
+                        <div class="no-operations-icon">✓</div>
+                        <div>No active operations</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = operations.map(op => `
+            <tr>
+                <td class="font-medium">${op.username}</td>
+                <td><span class="operation-type">${op.operation_type}</span></td>
+                <td>${op.service_type}</td>
+                <td class="duration">${formatDuration(op.duration_seconds)}</td>
+                <td class="file-counts">${formatFileCounts(op)}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="showCancelModal('${op.transaction_id}', '${op.username}', '${op.operation_type}')">
+                        Cancel
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function formatDuration(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (minutes > 0) {
+            return `${minutes}m ${secs}s`;
+        }
+        return `${secs}s`;
+    }
+
+    function formatFileCounts(op) {
+        if (op.operation_type === 'Reconcile') {
+            const pullCount = op.files_to_pull || 0;
+            const pushCount = op.files_to_push || 0;
+            return `↓${pullCount} ↑${pushCount}`;
+        }
+        // For Pull/Push, we don't have exact counts during operation
+        return '-';
+    }
+
+    function showCancelModal(transactionId, username, operationType) {
+        pendingCancellation = transactionId;
+        const message = `Cancel operation by ${username}? This will rollback all changes and release the lock.`;
+        document.getElementById('cancelMessage').textContent = message;
+        document.getElementById('cancelModal').style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+        pendingCancellation = null;
+        document.getElementById('cancelModal').style.display = 'none';
+    }
+
+    async function confirmCancel() {
+        if (!pendingCancellation) return;
+
+        const transactionId = pendingCancellation;
+        closeCancelModal();
+
+        try {
+            const response = await fetch(`/admin/api/operations/${transactionId}/cancel`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification('Operation cancelled successfully', 'success');
+                // Refresh operations list immediately
+                loadOperations();
+            } else {
+                showNotification(data.message || 'Failed to cancel operation', 'error');
+            }
+        } catch (error) {
+            console.error('Error cancelling operation:', error);
+            showNotification('Error cancelling operation', 'error');
+        }
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification notification-${type}`;
+        notification.style.display = 'block';
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 5000);
+    }
+
+    // Clean up interval when page is unloaded
+    window.addEventListener('beforeunload', function() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    .refresh-info {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .operation-type {
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .duration {
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+    }
+
+    .file-counts {
+        font-size: 0.875rem;
+    }
+
+    .no-operations {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .no-operations-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .modal-close {
+        font-size: 2rem;
+        cursor: pointer;
+        color: #666;
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: #000;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-body p {
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    /* Notification */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 4px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 2000;
+        max-width: 400px;
+    }
+
+    .notification-success {
+        border-left: 4px solid #10b981;
+    }
+
+    .notification-error {
+        border-left: 4px solid #ef4444;
+    }
+
+    .font-medium {
+        font-weight: 500;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,677 @@
+{% extends "base.html" %}
+
+{% block title %}File Management - AlderSync Admin{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+    <div class="page-header">
+        <h1>File Management</h1>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchService('Contemporary')">Contemporary</button>
+            <button class="tab-button" onclick="switchService('Traditional')">Traditional</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Files - <span id="current-service">Contemporary</span></h2>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" id="file-search" placeholder="Search files..." onkeyup="filterFiles()">
+                </div>
+                <button class="btn btn-primary" onclick="loadFiles()" title="Refresh file list">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle;">
+                        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
+            <div id="loading" style="text-align: center; padding: 2rem;">
+                <p>Loading files...</p>
+            </div>
+            <div id="files-container" style="display: none;">
+                <div class="table-container">
+                    <table class="table" id="files-table">
+                        <thead>
+                            <tr>
+                                <th>Path</th>
+                                <th>Size</th>
+                                <th>Modified</th>
+                                <th>User</th>
+                                <th>Changelist ID</th>
+                                <th>Revisions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="files-tbody">
+                            <!-- Files will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-files" style="display: none; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    No files found
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revisions Modal -->
+<div id="revisions-modal" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>File Revisions</h2>
+            <span class="modal-close" onclick="closeModal('revisions-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1rem;"><strong>File:</strong> <span id="revision-file-path"></span></p>
+            <div id="revisions-loading" style="text-align: center; padding: 2rem;">
+                <p>Loading revisions...</p>
+            </div>
+            <div id="revisions-content" style="display: none;">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Revision</th>
+                                <th>Size</th>
+                                <th>Modified</th>
+                                <th>User</th>
+                                <th>Changelist ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="revisions-tbody">
+                            <!-- Revisions will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-revisions" style="display: none; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    No revisions found
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirm-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+            <span class="modal-close" onclick="closeModal('delete-confirm-modal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="delete-confirm-message"></p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-confirm-modal')">Cancel</button>
+                <button type="button" class="btn btn-danger" id="delete-confirm-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Notification -->
+<div id="notification" class="notification" style="display: none;"></div>
+
+<script>
+    let currentService = 'Contemporary';
+    let allFiles = [];
+
+    // Switch service type
+    async function switchService(serviceType) {
+        currentService = serviceType;
+        document.getElementById('current-service').textContent = serviceType;
+
+        // Update active tab
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => {
+            if (tab.textContent === serviceType) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+
+        // Load files for this service
+        await loadFiles();
+    }
+
+    // Load files from server
+    async function loadFiles() {
+        const loading = document.getElementById('loading');
+        const container = document.getElementById('files-container');
+
+        loading.style.display = 'block';
+        container.style.display = 'none';
+
+        try {
+            const response = await fetch(`/admin/api/files?service_type=${currentService}`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error('Failed to load files');
+            }
+
+            allFiles = await response.json();
+            displayFiles(allFiles);
+
+            loading.style.display = 'none';
+            container.style.display = 'block';
+        } catch (error) {
+            showNotification('Failed to load files', 'error');
+            console.error('Error:', error);
+            loading.style.display = 'none';
+        }
+    }
+
+    // Display files in table
+    function displayFiles(files) {
+        const tbody = document.getElementById('files-tbody');
+        const noFiles = document.getElementById('no-files');
+        const filesTable = document.getElementById('files-table');
+
+        tbody.innerHTML = '';
+
+        if (files.length === 0) {
+            filesTable.style.display = 'none';
+            noFiles.style.display = 'block';
+            return;
+        }
+
+        filesTable.style.display = 'table';
+        noFiles.style.display = 'none';
+
+        files.forEach(file => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-path', file.path);
+
+            const username = file.username || 'Unknown';
+            const sizeFormatted = formatBytes(file.size);
+            const changelistId = file.changelist_id !== null && file.changelist_id !== undefined ? file.changelist_id : 'N/A';
+
+            row.innerHTML = `
+                <td class="font-medium">${escapeHtml(file.path)}</td>
+                <td>${sizeFormatted}</td>
+                <td class="utc-time" data-utc="${file.modified_utc}">${file.modified_utc}</td>
+                <td>${escapeHtml(username)}</td>
+                <td>${changelistId}</td>
+                <td><span class="badge badge-info">${file.revision_count || 0}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" onclick="viewRevisions('${escapeHtml(file.path)}')">Revisions</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteFile('${escapeHtml(file.path)}')">Delete</button>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+        // Convert UTC times to local
+        convertUTCTimes();
+    }
+
+    // Filter files by search term
+    function filterFiles() {
+        const searchTerm = document.getElementById('file-search').value.toLowerCase();
+        const filteredFiles = allFiles.filter(file =>
+            file.path.toLowerCase().includes(searchTerm)
+        );
+        displayFiles(filteredFiles);
+    }
+
+    // View revisions for a file
+    async function viewRevisions(filePath) {
+        document.getElementById('revision-file-path').textContent = filePath;
+        document.getElementById('revisions-modal').style.display = 'flex';
+        document.getElementById('revisions-loading').style.display = 'block';
+        document.getElementById('revisions-content').style.display = 'none';
+
+        try {
+            const response = await fetch(`/admin/api/files/revisions?path=${encodeURIComponent(filePath)}&service_type=${currentService}`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error('Failed to load revisions');
+            }
+
+            const revisions = await response.json();
+            displayRevisions(revisions, filePath);
+
+            document.getElementById('revisions-loading').style.display = 'none';
+            document.getElementById('revisions-content').style.display = 'block';
+        } catch (error) {
+            showNotification('Failed to load revisions', 'error');
+            console.error('Error:', error);
+            document.getElementById('revisions-loading').style.display = 'none';
+        }
+    }
+
+    // Display revisions in modal
+    function displayRevisions(revisions, filePath) {
+        const tbody = document.getElementById('revisions-tbody');
+        const noRevisions = document.getElementById('no-revisions');
+        const revisionsTable = tbody.closest('table');
+
+        tbody.innerHTML = '';
+
+        if (revisions.length === 0) {
+            revisionsTable.style.display = 'none';
+            noRevisions.style.display = 'block';
+            return;
+        }
+
+        revisionsTable.style.display = 'table';
+        noRevisions.style.display = 'none';
+
+        // Find the highest revision number (this is the current version)
+        const maxRevision = Math.max(...revisions.map(r => r.revision));
+
+        revisions.forEach(rev => {
+            const row = document.createElement('tr');
+            const username = rev.username || 'Unknown';
+            const sizeFormatted = formatBytes(rev.size);
+            const revisionLabel = `#${rev.revision}`;
+            const changelistId = rev.changelist_id !== null && rev.changelist_id !== undefined ? rev.changelist_id : 'N/A';
+
+            row.innerHTML = `
+                <td><strong>${revisionLabel}</strong></td>
+                <td>${sizeFormatted}</td>
+                <td class="utc-time" data-utc="${rev.modified_utc}">${rev.modified_utc}</td>
+                <td>${escapeHtml(username)}</td>
+                <td>${changelistId}</td>
+                <td>
+                    <div class="action-buttons">
+                        ${rev.revision !== maxRevision ? `<button class="btn btn-sm btn-primary" onclick="confirmRestoreRevision('${escapeHtml(filePath)}', ${rev.revision})">Restore</button>` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteRevision('${escapeHtml(filePath)}', ${rev.revision})">Delete</button>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+        // Convert UTC times to local
+        convertUTCTimes();
+    }
+
+    // Confirm file deletion
+    function confirmDeleteFile(filePath) {
+        document.getElementById('delete-confirm-message').textContent =
+            `Are you sure you want to delete "${filePath}"? The file will be marked as deleted and moved to a revision.`;
+
+        document.getElementById('delete-confirm-btn').onclick = () => deleteFile(filePath);
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+    }
+
+    // Confirm revision deletion
+    function confirmDeleteRevision(filePath, revision) {
+        // Get all revisions to check if this is the current version
+        const tbody = document.getElementById('revisions-tbody');
+        const revisionRows = tbody.children;
+        const revisionCount = revisionRows.length;
+
+        // Check if this is the current revision (will be marked with "(Current)")
+        let isCurrentRevision = false;
+        for (let i = 0; i < revisionRows.length; i++) {
+            const row = revisionRows[i];
+            const revisionCell = row.cells[0];
+            if (revisionCell.textContent.includes(`#${revision}`) && revisionCell.textContent.includes('(Current)')) {
+                isCurrentRevision = true;
+                break;
+            }
+        }
+
+        let message = '';
+        if (isCurrentRevision) {
+            message = `Are you sure you want to delete the current revision #${revision} of "${filePath}"?\n\nThe previous revision will become the current version.`;
+        } else {
+            message = `Are you sure you want to permanently delete revision #${revision} of "${filePath}"?`;
+        }
+
+        document.getElementById('delete-confirm-message').textContent = message;
+        document.getElementById('delete-confirm-btn').textContent = 'Delete';
+        document.getElementById('delete-confirm-btn').className = 'btn btn-danger';
+        document.getElementById('delete-confirm-btn').onclick = () => deleteRevision(filePath, revision);
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+    }
+
+    // Confirm revision restoration
+    function confirmRestoreRevision(filePath, revision) {
+        document.getElementById('delete-confirm-message').textContent =
+            `Are you sure you want to restore revision #${revision} of "${filePath}"?\n\nThis will:\n1. Archive the current version\n2. Make revision #${revision} the new current version`;
+
+        document.getElementById('delete-confirm-btn').textContent = 'Restore';
+        document.getElementById('delete-confirm-btn').className = 'btn btn-primary';
+        document.getElementById('delete-confirm-btn').onclick = () => restoreRevision(filePath, revision);
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+    }
+
+    // Delete a file
+    async function deleteFile(filePath) {
+        closeModal('delete-confirm-modal');
+
+        try {
+            const response = await fetch(`/admin/api/files/delete`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    path: filePath,
+                    service_type: currentService
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`File "${filePath}" deleted successfully`, 'success');
+                await loadFiles();
+            } else {
+                showNotification(data.detail || 'Failed to delete file', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to delete file', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Delete a revision
+    async function deleteRevision(filePath, revision) {
+        closeModal('delete-confirm-modal');
+
+        try {
+            const response = await fetch(`/admin/api/files/delete-revision`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    path: filePath,
+                    service_type: currentService,
+                    revision: revision
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`Revision #${revision} deleted successfully`, 'success');
+                // Refresh the revisions modal and file list
+                await viewRevisions(filePath);
+                await loadFiles();
+            } else {
+                showNotification(data.detail || 'Failed to delete revision', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to delete revision', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Restore a revision
+    async function restoreRevision(filePath, revision) {
+        closeModal('delete-confirm-modal');
+
+        try {
+            const response = await fetch(`/admin/api/files/restore-revision`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    path: filePath,
+                    service_type: currentService,
+                    revision: revision
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification(`Revision #${revision} restored as current version`, 'success');
+                // Refresh the revisions modal and file list
+                await viewRevisions(filePath);
+                await loadFiles();
+            } else {
+                showNotification(data.detail || 'Failed to restore revision', 'error');
+            }
+        } catch (error) {
+            showNotification('Network error: Failed to restore revision', 'error');
+            console.error('Error:', error);
+        }
+    }
+
+    // Utility functions
+    function formatBytes(bytes) {
+        if (bytes === null || bytes === undefined) return 'N/A';
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification notification-${type}`;
+        notification.style.display = 'block';
+
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 5000);
+    }
+
+    function convertUTCTimes() {
+        const timeElements = document.querySelectorAll('.utc-time');
+
+        timeElements.forEach(element => {
+            const utcTime = element.getAttribute('data-utc');
+            if (utcTime && utcTime !== '') {
+                try {
+                    const date = new Date(utcTime);
+
+                    const options = {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+
+                    const localTime = date.toLocaleString(undefined, options);
+                    element.textContent = localTime;
+                } catch (e) {
+                    console.error('Error converting time:', e);
+                }
+            }
+        });
+    }
+
+    // Load files on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFiles();
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    .tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--text-color);
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .tab-button:hover {
+        background: var(--bg-color);
+    }
+
+    .tab-button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-large {
+        max-width: 900px;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--text-color);
+    }
+
+    .modal-close {
+        font-size: 2rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: var(--text-color);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-box input {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        width: 300px;
+        font-size: 0.875rem;
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 4px;
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        box-shadow: var(--shadow-lg);
+        z-index: 2000;
+        max-width: 400px;
+    }
+
+    .notification-success {
+        border-left: 4px solid #10b981;
+    }
+
+    .notification-error {
+        border-left: 4px solid #ef4444;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .font-medium {
+        font-weight: 500;
+    }
+</style>
+
+{% endblock %}
