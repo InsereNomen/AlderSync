@@ -279,21 +279,19 @@ def GetCurrentClientVersion(db_manager) -> Optional[str]:
 
 def DeleteClientVersion(db_manager, version: str) -> bool:
     """
-    Delete a client version file (but not if it's the current version).
+    Delete a client version file.
+    If deleting the current active version, clears the active version setting.
 
     Args:
         db_manager: DatabaseManager instance
         version: Version to delete
 
     Returns:
-        True if deleted, False if it's the current version
+        True if deleted successfully, False otherwise
     """
+    from models.database import Setting
+
     current_version = GetCurrentClientVersion(db_manager)
-
-    if version == current_version:
-        logger.warning(f"Cannot delete current client version: {version}")
-        return False
-
     downloads_path = GetClientDownloadsPath(db_manager)
 
     # Find and delete all files matching this version
@@ -303,6 +301,20 @@ def DeleteClientVersion(db_manager, version: str) -> bool:
             logger.info(f"Deleting client version file: {file_path}")
             file_path.unlink()
             deleted = True
+
+    # If we deleted the current version, clear the active version setting
+    if deleted and version == current_version:
+        logger.warning(f"Deleted current active client version: {version}. Clearing active version setting.")
+        session = db_manager.GetSession()
+        try:
+            version_setting = session.query(Setting).filter(
+                Setting.key == "latest_client_version"
+            ).first()
+            if version_setting:
+                session.delete(version_setting)
+                session.commit()
+        finally:
+            session.close()
 
     return deleted
 

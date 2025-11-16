@@ -79,6 +79,7 @@ Server/database/*.db-journal
 !Server/database/.gitkeep
 
 # Other
+commit_msg.txt
 Description.md
 Plan.md
 progress.html

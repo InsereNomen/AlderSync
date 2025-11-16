@@ -22,7 +22,7 @@
                     <label for="platform">Platform:</label>
                     <select id="platform" name="platform" required>
                         <option value="windows">Windows (.exe or .zip)</option>
-                        <option value="macos">macOS (.zip)</option>
+                        <option value="macos">macOS (.app or .zip)</option>
                         <option value="linux">Linux</option>
                     </select>
                 </div>
@@ -385,10 +385,9 @@ async function loadVersions() {
 
             if (!isCurrent) {
                 html += `<button class="btn btn-secondary btn-small" onclick="setActiveVersion('${version.version}')">Set Active</button>`;
-                html += `<button class="btn btn-danger btn-small" onclick="deleteVersion('${version.version}')">Delete</button>`;
-            } else {
-                html += '<em>Current version</em>';
             }
+            // Always show delete button
+            html += `<button class="btn btn-danger btn-small" onclick="deleteVersion('${version.version}', ${isCurrent})">Delete</button>`;
 
             html += '</div></td>';
             html += '</tr>';
@@ -435,8 +434,12 @@ async function setActiveVersion(version) {
 }
 
 // Delete a version
-async function deleteVersion(version) {
-    if (!confirm(`Delete version ${version}? This cannot be undone.`)) {
+async function deleteVersion(version, isCurrent = false) {
+    const message = isCurrent
+        ? `Delete ACTIVE version ${version}?\n\nWARNING: This is the current active version. After deletion, clients will have no version available for download until you upload and activate a new version.\n\nThis cannot be undone.`
+        : `Delete version ${version}? This cannot be undone.`;
+
+    if (!confirm(message)) {
         return;
     }
 

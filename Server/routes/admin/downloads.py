@@ -330,7 +330,8 @@ async def admin_delete_client_version(
     session: dict = Depends(RequireAdminSession)
 ):
     """
-    Delete a client version (if it's not the current version).
+    Delete a client version.
+    If deleting the active version, the active version setting will be cleared.
 
     Args:
         version: Version to delete
@@ -345,8 +346,8 @@ async def admin_delete_client_version(
 
         if not success:
             raise HTTPException(
-                status_code=400,
-                detail="Cannot delete the current active version"
+                status_code=404,
+                detail=f"Version {version} not found"
             )
 
         logger.info(f"Admin '{session['username']}' deleted client version {version}")
