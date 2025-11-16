@@ -320,9 +320,9 @@ document.getElementById('platform').addEventListener('change', (e) => {
     const platform = e.target.value;
 
     if (platform === 'windows') {
-        fileInput.accept = '.exe';
+        fileInput.accept = '.exe,.zip';
     } else if (platform === 'macos') {
-        fileInput.accept = '.app';
+        fileInput.accept = '.app,.zip';
     } else {
         fileInput.accept = '';
     }
