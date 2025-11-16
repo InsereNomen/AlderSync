@@ -37,10 +37,16 @@ services:
       # Log file persistence (bind mount)
       - /volume1/Aldersync/logs:/app/logs
 
+      # SSL certificates (bind mount) - REQUIRED for HTTPS
+      - /volume1/Aldersync/ssl:/app/ssl
+
     # Environment variables for server configuration
     environment:
       # Keep Python output unbuffered for better logging
       - PYTHONUNBUFFERED=1
+
+      # SSL certificate directory (REQUIRED for HTTPS)
+      - SSL_DIR=/app/ssl
 
       # Optional: Configure database path (default: /app/database/aldersync.db)
       # - DB_PATH=/app/database/aldersync.db
@@ -55,10 +61,11 @@ services:
     # Restart policy: always restart unless explicitly stopped
     restart: unless-stopped
 
-    # Health check inherited from Dockerfile
+    # Health check for HTTPS server
     # Ensures container is marked unhealthy if server stops responding
+    # Note: Uses curl with -k to accept self-signed certificates
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       start_period: 5s

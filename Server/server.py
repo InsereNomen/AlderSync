@@ -208,15 +208,25 @@ if __name__ == "__main__":
     logger.info("Starting AlderSync Server...")
 
     # Determine SSL certificate paths
-    server_dir = Path(__file__).parent
-    cert_file = server_dir / "cert.pem"
-    key_file = server_dir / "key.pem"
+    # Check for SSL_DIR environment variable (used in Docker deployments)
+    import os
+    ssl_dir = os.getenv('SSL_DIR')
+    if ssl_dir:
+        cert_file = Path(ssl_dir) / "cert.pem"
+        key_file = Path(ssl_dir) / "key.pem"
+    else:
+        # Default: same directory as server.py (for local deployments)
+        server_dir = Path(__file__).parent
+        cert_file = server_dir / "cert.pem"
+        key_file = server_dir / "key.pem"
 
     # Check if SSL certificates exist
     if not cert_file.exists() or not key_file.exists():
         logger.error("SSL certificates not found!")
         logger.error(f"Expected certificate at: {cert_file}")
         logger.error(f"Expected key at: {key_file}")
+        if ssl_dir:
+            logger.error("SSL_DIR environment variable is set but certificates not found in that directory")
         logger.error("Run 'python generate_ssl_cert.py' to generate self-signed certificates")
         raise FileNotFoundError("SSL certificates not found. HTTPS is required for AlderSync.")
 

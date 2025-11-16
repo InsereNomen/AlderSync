@@ -36,7 +36,39 @@ This package contains everything needed to deploy AlderSync Server using Portain
    chmod -R 755 /opt/aldersync/portainer-deployment
    ```
 
-### Step 2: Import Docker Image
+### Step 2: Generate SSL Certificates
+
+**IMPORTANT**: HTTPS is REQUIRED. The server will not start without SSL certificates!
+
+SSH into your NAS and generate self-signed SSL certificates:
+
+```bash
+# Navigate to the deployment directory
+cd /opt/aldersync/portainer-deployment
+
+# Create ssl directory
+mkdir -p ssl
+cd ssl
+
+# Generate self-signed certificate (valid for 10 years)
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout key.pem \
+  -out cert.pem \
+  -days 3650 \
+  -subj "/C=US/ST=State/L=City/O=Church/CN=aldersync-server"
+
+# Verify certificates were created
+ls -la *.pem
+# Should show: cert.pem and key.pem
+
+# Set appropriate permissions
+chmod 644 cert.pem
+chmod 600 key.pem
+```
+
+**Note**: Clients will need to set `verify_ssl: false` in their config to accept these self-signed certificates.
+
+### Step 3: Import Docker Image
 
 1. Log in to your Portainer web interface
 
@@ -63,7 +95,7 @@ This package contains everything needed to deploy AlderSync Server using Portain
    **Option B: Edit docker-compose.yml**
    - Edit the `image:` line in docker-compose.yml to match the imported image name
 
-### Step 3: Create Stack in Portainer
+### Step 4: Create Stack in Portainer
 
 1. In Portainer, navigate to **Stacks** in the sidebar
 
@@ -87,6 +119,7 @@ This package contains everything needed to deploy AlderSync Server using Portain
      - /volume1/Aldersync/storage/Traditional:/app/storage/Traditional
      - /volume1/Aldersync/client_downloads:/app/client_downloads
      - /volume1/Aldersync/logs:/app/logs
+     - /volume1/Aldersync/ssl:/app/ssl
    ```
 
    Change the paths to match where you uploaded the package on your NAS.
@@ -98,6 +131,7 @@ This package contains everything needed to deploy AlderSync Server using Portain
      - /opt/aldersync/portainer-deployment/storage/Traditional:/app/storage/Traditional
      - /opt/aldersync/portainer-deployment/client_downloads:/app/client_downloads
      - /opt/aldersync/portainer-deployment/logs:/app/logs
+     - /opt/aldersync/portainer-deployment/ssl:/app/ssl
    ```
 
 6. **Environment Variables** (Optional):
@@ -108,7 +142,7 @@ This package contains everything needed to deploy AlderSync Server using Portain
 
 7. Click **Deploy the stack**
 
-### Step 4: Verify Deployment
+### Step 5: Verify Deployment
 
 1. In Portainer, navigate to **Containers**
 
@@ -125,18 +159,20 @@ This package contains everything needed to deploy AlderSync Server using Portain
    **IMPORTANT**: Save this password immediately. You'll need it to log in.
 
 6. Test the server is accessible:
-   - Open browser to: `http://your-nas-ip:8000`
+   - Open browser to: `https://your-nas-ip:8000`
+   - **Note**: You'll see a certificate warning - this is normal for self-signed certificates. Click "Advanced" and "Proceed" to continue.
    - You should see the AlderSync login page
 
 7. Verify health endpoint:
    ```bash
-   curl http://your-nas-ip:8000/health
+   curl -k https://your-nas-ip:8000/health
    ```
    Should return: `{"status":"healthy",...}`
+   **Note**: The `-k` flag disables SSL verification for self-signed certificates.
 
-### Step 5: Initial Configuration
+### Step 6: Initial Configuration
 
-1. Access the web interface: `http://your-nas-ip:8000`
+1. Access the web interface: `https://your-nas-ip:8000`
 
 2. Log in with:
    - **Username**: `admin`
@@ -159,6 +195,7 @@ After deployment, your data will be stored in:
 | **Traditional Files** | `/volume1/Aldersync/storage/Traditional` |
 | **Client Downloads** | `/volume1/Aldersync/client_downloads` |
 | **Log Files** | `/volume1/Aldersync/logs` |
+| **SSL Certificates** | `/volume1/Aldersync/ssl` (cert.pem and key.pem) |
 
 All data is stored in bind mounts, so you can access files directly on the NAS for inspection or backup.
 
@@ -236,7 +273,7 @@ Your data will persist through the update as it's stored in volumes.
 
 1. Verify container is running and healthy in Portainer
 2. Check firewall settings on NAS allow port 8000
-3. Test locally on NAS: `curl http://localhost:8000/health`
+3. Test locally on NAS: `curl -k https://localhost:8000/health`
 
 ### Database Locked Errors
 
@@ -282,15 +319,18 @@ deploy:
 
 1. **Change admin password** immediately after first login
 2. **Limit network access** using firewall rules
-3. **Regular backups** of database and storage
+3. **Regular backups** of database and storage (including SSL certificates)
 4. **Update regularly** when new versions are released
-5. Consider using **reverse proxy with SSL/TLS** for production
+5. **Protect SSL certificates** - ensure proper file permissions (600 for key.pem)
+6. For production with external access, consider using **reverse proxy** (e.g., Nginx) with properly signed certificates
 
 ## API Documentation
 
 Once running, API documentation is available at:
-- Swagger UI: `http://your-nas-ip:8000/docs`
-- ReDoc: `http://your-nas-ip:8000/redoc`
+- Swagger UI: `https://your-nas-ip:8000/docs`
+- ReDoc: `https://your-nas-ip:8000/redoc`
+
+**Note**: You'll need to accept the certificate warning in your browser.
 
 ## Support
 
