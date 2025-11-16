@@ -166,8 +166,8 @@ def StoreClientExecutable(db_manager, file_data: bytes, version: str,
                 session.add(path_setting)
                 logger.info(f"Created client_executable_path setting: {file_path.absolute()}")
 
-            # Store upload timestamp
-            timestamp_key = f"client_version_{version}_uploaded"
+            # Store upload timestamp (include platform to allow multiple platforms per version)
+            timestamp_key = f"client_version_{version}_{platform}_uploaded"
             timestamp_setting = Setting(
                 key=timestamp_key,
                 value=datetime.now(timezone.utc).isoformat()

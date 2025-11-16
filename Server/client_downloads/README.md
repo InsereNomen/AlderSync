@@ -98,7 +98,7 @@ The system uses these database settings:
 - `client_downloads_path` - Path to client downloads folder (default: `client_downloads/`)
 - `latest_client_version` - Current active version (e.g., "1.0.1")
 - `client_executable_path` - Full path to current active executable
-- `client_version_{version}_uploaded` - Timestamp for each uploaded version
+- `client_version_{version}_{platform}_uploaded` - Timestamp for each uploaded version/platform combination
 
 ## Auto-Update Workflow
 
