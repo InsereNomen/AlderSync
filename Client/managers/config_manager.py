@@ -9,6 +9,7 @@ Author: AlderSync Project
 
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -37,15 +38,22 @@ class ConfigManager:
     Manages client configuration and credentials.
 
     Responsibilities:
-    - Load/save config.json from ~/.aldersync/
+    - Load/save config.json next to the executable (same location as logs folder)
     - Store/retrieve password from OS credential store via keyring
     - Provide configuration values to other modules
     """
 
     def __init__(self):
         """Initialize configuration manager."""
-        self.config_dir = Path.home() / ".aldersync"
-        self.config_file = self.config_dir / "config.json"
+        # Determine base directory (same logic as logs folder)
+        if getattr(sys, 'frozen', False):
+            # Running as compiled executable
+            base_dir = Path(sys.executable).parent
+        else:
+            # Running as script
+            base_dir = Path.cwd()
+
+        self.config_file = base_dir / "config.json"
         self.config: Dict[str, Any] = {}
 
     def load_config(self) -> Dict[str, Any]:
@@ -56,9 +64,6 @@ class ConfigManager:
         Returns:
             Configuration dictionary
         """
-        # Create config directory if it doesn't exist
-        self.config_dir.mkdir(exist_ok=True)
-
         # Load config file or create default
         if self.config_file.exists():
             logger.debug(f"Loading configuration from {self.config_file}")
