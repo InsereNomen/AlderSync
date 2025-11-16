@@ -70,9 +70,14 @@ jobs:
           cd Client
           pyinstaller aldersync.spec
 
+      - name: Prepare macOS distribution package
+        run: |
+          mkdir -p macos-dist
+          cp -r Client/dist/AlderSync.app macos-dist/
+
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: AlderSync-macOS
-          path: Client/dist/AlderSync.app
+          path: macos-dist
           retention-days: 30

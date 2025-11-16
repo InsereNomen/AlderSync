@@ -247,16 +247,16 @@ async def admin_upload_client(
 
         # Validate file extension matches platform
         filename_lower = file.filename.lower()
-        if platform == "windows" and not filename_lower.endswith(".exe"):
+        if platform == "windows" and not (filename_lower.endswith(".exe") or filename_lower.endswith(".zip")):
             raise HTTPException(
                 status_code=400,
-                detail="Windows executable must have .exe extension"
+                detail="Windows client must have .exe or .zip extension"
             )
-        elif platform == "macos" and not filename_lower.endswith(".app"):
-            # Note: macOS apps are actually directories, but for simplicity we accept .app files
+        elif platform == "macos" and not (filename_lower.endswith(".app") or filename_lower.endswith(".zip")):
+            # Note: macOS apps are directories, so .zip is the practical upload format
             raise HTTPException(
                 status_code=400,
-                detail="macOS executable must have .app extension"
+                detail="macOS client must have .app or .zip extension"
             )
 
         # Read file data
