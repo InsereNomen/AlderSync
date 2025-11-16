@@ -56,6 +56,45 @@ def GetAdminSession(request: Request) -> Optional[dict]:
     }
 
 
+def RequireSession(request: Request) -> dict:
+    """
+    Dependency to require valid session (any authenticated user)
+    Returns session info including is_admin flag
+    """
+    from database import db_manager
+
+    session = GetAdminSession(request)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Not authenticated",
+            headers={"Location": "/admin/login"}
+        )
+
+    # Get user info including admin status
+    db_session = db_manager.GetSession()
+    try:
+        user = db_session.query(User).filter(User.user_id == session['user_id']).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+
+        # Check if user has admin permission
+        has_admin = False
+        if user.role:
+            permissions = [perm.permission_name for perm in user.role.permissions]
+            has_admin = 'admin' in permissions
+
+        # Add admin flag to session
+        session['is_admin'] = has_admin
+        return session
+
+    finally:
+        db_session.close()
+
+
 def RequireAdminSession(request: Request) -> dict:
     """
     Dependency to require admin session with admin permission
@@ -113,9 +152,28 @@ async def favicon():
 
 
 @router.get("/admin", response_class=RedirectResponse, tags=["Admin"])
-async def admin_root():
-    """Redirect /admin to /admin/dashboard"""
-    return RedirectResponse(url="/admin/dashboard", status_code=303)
+async def admin_root(request: Request):
+    """Redirect /admin to appropriate page based on user role"""
+    from database import db_manager
+
+    session = GetAdminSession(request)
+    if not session:
+        return RedirectResponse(url="/admin/login", status_code=303)
+
+    # Check if user is admin to determine redirect location
+    db_session = db_manager.GetSession()
+    try:
+        user_record = db_session.query(User).filter(User.user_id == session['user_id']).first()
+        is_admin = False
+        if user_record and user_record.role:
+            permissions = [perm.permission_name for perm in user_record.role.permissions]
+            is_admin = 'admin' in permissions
+
+        # Redirect admins to dashboard, non-admins to user docs
+        redirect_url = "/admin/dashboard" if is_admin else "/admin/docs/user"
+        return RedirectResponse(url=redirect_url, status_code=303)
+    finally:
+        db_session.close()
 
 
 @router.get("/admin/login", response_class=HTMLResponse, tags=["Admin"])
@@ -126,10 +184,25 @@ async def admin_login_page(request: Request):
     Returns:
         HTML login form
     """
+    from database import db_manager
+
     # Check if already logged in
     session = GetAdminSession(request)
     if session:
-        return RedirectResponse(url="/admin/dashboard", status_code=303)
+        # Check if user is admin to determine redirect location
+        db_session = db_manager.GetSession()
+        try:
+            user_record = db_session.query(User).filter(User.user_id == session['user_id']).first()
+            is_admin = False
+            if user_record and user_record.role:
+                permissions = [perm.permission_name for perm in user_record.role.permissions]
+                is_admin = 'admin' in permissions
+
+            # Redirect admins to dashboard, non-admins to user docs
+            redirect_url = "/admin/dashboard" if is_admin else "/admin/docs/user"
+            return RedirectResponse(url=redirect_url, status_code=303)
+        finally:
+            db_session.close()
 
     return templates.TemplateResponse(
         "login.html",
@@ -167,8 +240,22 @@ async def admin_login_submit(
     # Create session
     session = CreateSession(user['user_id'], user['username'])
 
+    # Check if user is admin to determine redirect location
+    db_session = db_manager.GetSession()
+    try:
+        user_record = db_session.query(User).filter(User.user_id == user['user_id']).first()
+        is_admin = False
+        if user_record and user_record.role:
+            permissions = [perm.permission_name for perm in user_record.role.permissions]
+            is_admin = 'admin' in permissions
+
+        # Redirect admins to dashboard, non-admins to user docs
+        redirect_url = "/admin/dashboard" if is_admin else "/admin/docs/user"
+    finally:
+        db_session.close()
+
     # Create response with redirect
-    response = RedirectResponse(url="/admin/dashboard", status_code=303)
+    response = RedirectResponse(url=redirect_url, status_code=303)
 
     # Set session cookie
     response.set_cookie(
@@ -176,6 +263,31 @@ async def admin_login_submit(
         value=session.session_id,
         max_age=SESSION_LIFETIME_HOURS * 3600,
         httponly=True,
+        samesite="lax"
+    )
+
+    return response
+
+
+@router.post("/admin/logout", tags=["Admin"])
+@router.get("/admin/logout", tags=["Admin"])
+async def admin_logout(request: Request):
+    """
+    Logout endpoint - clears session and redirects to login page
+    Supports both GET and POST methods
+    """
+    session = GetAdminSession(request)
+    if session:
+        # Delete the session from server
+        DeleteSession(session['session_id'])
+
+    # Create redirect response
+    response = RedirectResponse(url="/admin/login", status_code=303)
+
+    # Clear the session cookie
+    response.delete_cookie(
+        key=SESSION_COOKIE_NAME,
+        path="/",
         samesite="lax"
     )
 

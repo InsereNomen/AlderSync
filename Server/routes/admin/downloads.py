@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from models.database import Setting
-from routes.admin.auth import RequireAdminSession
+from routes.admin.auth import RequireAdminSession, RequireSession
 from client_downloads import (
     GetClientDownloadsPath, StoreClientExecutable,
     ListClientVersions, GetCurrentClientVersion, DeleteClientVersion, SetActiveClientVersion
@@ -32,158 +32,27 @@ templates = Jinja2Templates(directory=str(script_dir / "templates"))
 @router.get("/admin/downloads", response_class=HTMLResponse, tags=["Admin"])
 async def admin_downloads_page(
     request: Request,
-    session: dict = Depends(RequireAdminSession)
-):
-    """
-    Display client downloads page
-    Per Specification.md section 12.1 and Task 7.3
-
-    Shows available client builds for Windows, Mac, and Linux with download links
-    and installation instructions.
-    """
-    context = {
-        "request": request,
-        "show_nav": True,
-        "active_page": "downloads",
-        "username": session["username"],
-        "is_admin": True  # Downloads page requires admin permission
-    }
-    return templates.TemplateResponse("downloads.html", context)
-
-
-@router.get("/admin/api/downloads", tags=["Admin"])
-async def admin_get_downloads(
-    session: dict = Depends(RequireAdminSession)
-):
-    """
-    Get list of available client downloads
-    Per Specification.md section 12.1 and Task 7.3
-
-    Scans the downloads directory for available client build files and returns
-    metadata including filename, size, and platform.
-
-    Returns:
-        List of available downloads with metadata
-    """
-    try:
-        from pathlib import Path
-        import os
-
-        # Define downloads directory path
-        downloads_dir = Path("downloads")
-
-        # Create directory if it doesn't exist
-        downloads_dir.mkdir(exist_ok=True)
-
-        # Define expected download files and their platforms
-        platform_mapping = {
-            'aldersync-windows.zip': 'windows',
-            'aldersync-mac.zip': 'mac',
-            'aldersync-linux.zip': 'linux'
-        }
-
-        downloads = []
-
-        # Check for each expected file
-        for filename, platform in platform_mapping.items():
-            file_path = downloads_dir / filename
-            if file_path.exists() and file_path.is_file():
-                # Get file size
-                file_size = file_path.stat().st_size
-
-                downloads.append({
-                    'filename': filename,
-                    'platform': platform,
-                    'size': file_size
-                })
-
-        logger.info(f"Admin '{session['username']}' viewed downloads page ({len(downloads)} files available)")
-
-        return downloads
-
-    except Exception as e:
-        logger.error(f"Error getting downloads: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve downloads")
-
-
-@router.get("/admin/downloads/file/{filename}", tags=["Admin"])
-async def admin_download_file(
-    filename: str,
-    session: dict = Depends(RequireAdminSession)
-):
-    """
-    Download a client build file
-    Per Specification.md section 12.1 and Task 7.3
-
-    Serves the requested client build file for download.
-
-    Args:
-        filename: Name of the file to download
-        session: Admin session from dependency
-
-    Returns:
-        FileResponse with the requested file
-
-    Raises:
-        HTTPException: If file not found or invalid filename
-    """
-    try:
-        from pathlib import Path
-
-        # Validate filename to prevent directory traversal attacks
-        allowed_files = ['aldersync-windows.zip', 'aldersync-mac.zip', 'aldersync-linux.zip']
-        if filename not in allowed_files:
-            raise HTTPException(status_code=400, detail="Invalid filename")
-
-        # Define downloads directory path
-        downloads_dir = Path("downloads")
-        file_path = downloads_dir / filename
-
-        # Check if file exists
-        if not file_path.exists() or not file_path.is_file():
-            raise HTTPException(status_code=404, detail="File not found")
-
-        logger.info(f"Admin '{session['username']}' downloaded client build: {filename}")
-
-        # Return file as download
-        return FileResponse(
-            path=str(file_path),
-            filename=filename,
-            media_type='application/zip'
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error downloading file '{filename}': {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to download file")
-
-
-# ==================== Admin Client Downloads Endpoints ====================
-
-@router.get("/admin/downloads", response_class=HTMLResponse, tags=["Admin"])
-async def admin_downloads_page(
-    request: Request,
-    session: dict = Depends(RequireAdminSession)
+    session: dict = Depends(RequireSession)
 ):
     """
     Display client downloads management page.
 
-    Allows admins to upload new client versions and manage existing downloads.
+    Allows all authenticated users to view downloads.
+    Only admins can upload new client versions and manage existing downloads.
     """
     context = {
         "request": request,
         "show_nav": True,
         "active_page": "downloads",
         "username": session["username"],
-        "is_admin": True  # Downloads page requires admin permission
+        "is_admin": session.get("is_admin", False)
     }
     return templates.TemplateResponse("downloads.html", context)
 
 
 @router.get("/admin/api/downloads/list", tags=["Admin"])
 async def admin_list_client_versions(
-    session: dict = Depends(RequireAdminSession)
+    session: dict = Depends(RequireSession)
 ):
     """
     List all available client versions.
@@ -267,7 +136,7 @@ async def admin_upload_client(
 
         # Store the executable
         from database import db_manager
-        result = StoreClientExecutable(db_manager, file_data, version, platform)
+        result = StoreClientExecutable(db_manager, file_data, version, platform, file.filename)
 
         logger.info(f"Admin '{session['username']}' uploaded client version {version} ({platform})")
 
@@ -322,6 +191,56 @@ async def admin_set_active_version(
     except Exception as e:
         logger.error(f"Error setting active version: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to set active version")
+
+
+@router.get("/admin/api/downloads/download/{version}", tags=["Admin"])
+async def admin_download_client_version(
+    version: str,
+    session: dict = Depends(RequireSession)
+):
+    """
+    Download a specific client version file.
+
+    Args:
+        version: Version to download
+        session: User session from dependency
+
+    Returns:
+        FileResponse with the requested file
+    """
+    try:
+        from database import db_manager
+        from fastapi.responses import FileResponse
+
+        downloads_path = GetClientDownloadsPath(db_manager)
+
+        # Find the file for this version
+        version_file = None
+        for file_path in downloads_path.iterdir():
+            if file_path.is_file() and f"-{version}" in file_path.name:
+                version_file = file_path
+                break
+
+        if not version_file or not version_file.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Version {version} file not found"
+            )
+
+        logger.info(f"User '{session['username']}' downloaded client version {version}")
+
+        # Return file as download
+        return FileResponse(
+            path=str(version_file),
+            filename=version_file.name,
+            media_type='application/octet-stream'
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading client version {version}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to download client version")
 
 
 @router.delete("/admin/api/downloads/delete/{version}", tags=["Admin"])

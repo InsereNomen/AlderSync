@@ -93,7 +93,7 @@ def GetClientDownloadsPath(db_manager) -> Path:
 
 
 def StoreClientExecutable(db_manager, file_data: bytes, version: str,
-                         platform: str = "windows") -> Dict[str, Any]:
+                         platform: str = "windows", original_filename: str = None) -> Dict[str, Any]:
     """
     Store a new client executable and update version settings.
 
@@ -102,6 +102,7 @@ def StoreClientExecutable(db_manager, file_data: bytes, version: str,
         file_data: Binary data of the executable
         version: Version string (e.g., "1.0.1")
         platform: Platform identifier (default: "windows")
+        original_filename: Original uploaded filename (to preserve extension)
 
     Returns:
         Dict with success status, file path, and metadata
@@ -113,16 +114,29 @@ def StoreClientExecutable(db_manager, file_data: bytes, version: str,
     # Get downloads folder
     downloads_path = GetClientDownloadsPath(db_manager)
 
-    # Determine filename based on platform
-    if platform == "windows":
-        filename = f"aldersync-{version}.exe"
-    elif platform == "macos":
-        filename = f"aldersync-{version}.app"
-    elif platform == "linux":
-        filename = f"aldersync-{version}"
-    else:
-        filename = f"aldersync-{version}.exe"  # Default to windows
+    # Determine file extension from original filename if provided
+    file_extension = None
+    if original_filename:
+        original_lower = original_filename.lower()
+        if original_lower.endswith('.zip'):
+            file_extension = '.zip'
+        elif original_lower.endswith('.exe'):
+            file_extension = '.exe'
+        elif original_lower.endswith('.app'):
+            file_extension = '.app'
 
+    # If no extension determined from filename, use platform default
+    if not file_extension:
+        if platform == "windows":
+            file_extension = ".exe"
+        elif platform == "macos":
+            file_extension = ".app"
+        elif platform == "linux":
+            file_extension = ""  # No extension for Linux
+        else:
+            file_extension = ".exe"  # Default to windows
+
+    filename = f"aldersync-{version}{file_extension}"
     file_path = downloads_path / filename
 
     # Write file to disk

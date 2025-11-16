@@ -4,9 +4,10 @@
 
 {% block content %}
 <div class="container-wide">
-    <h2>Client Downloads Management</h2>
-    <p>Upload and manage AlderSync client versions for automatic updates.</p>
+    <h2>Client Downloads{% if is_admin %} Management{% endif %}</h2>
+    <p>{% if is_admin %}Upload and manage{% else %}Download{% endif %} AlderSync client versions{% if is_admin %} for automatic updates{% endif %}.</p>
 
+    {% if is_admin %}
     <!-- Upload New Version Section -->
     <div class="card">
         <h3>Upload New Client Version</h3>
@@ -41,6 +42,7 @@
 
         <div id="upload-status" class="status-message" style="display: none;"></div>
     </div>
+    {% endif %}
 
     <!-- Version List Section -->
     <div class="card">
@@ -266,67 +268,70 @@
 
 <script>
 let currentVersionsList = [];
+const isAdmin = {{ 'true' if is_admin else 'false' }};
 
 // Load versions on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadVersions();
 });
 
-// Handle upload form submission
-document.getElementById('upload-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// Handle upload form submission (only if admin)
+if (isAdmin) {
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    const formData = new FormData(e.target);
-    const statusDiv = document.getElementById('upload-status');
+        const formData = new FormData(e.target);
+        const statusDiv = document.getElementById('upload-status');
 
-    // Show loading status
-    statusDiv.style.display = 'block';
-    statusDiv.className = 'status-message info';
-    statusDiv.textContent = 'Uploading...';
+        // Show loading status
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'status-message info';
+        statusDiv.textContent = 'Uploading...';
 
-    try {
-        const response = await fetch('/admin/api/downloads/upload', {
-            method: 'POST',
-            body: formData
-        });
+        try {
+            const response = await fetch('/admin/api/downloads/upload', {
+                method: 'POST',
+                body: formData
+            });
 
-        const result = await response.json();
+            const result = await response.json();
 
-        if (response.ok) {
-            statusDiv.className = 'status-message success';
-            statusDiv.textContent = `Success! Version ${result.version} uploaded. This version is now active.`;
+            if (response.ok) {
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = `Success! Version ${result.version} uploaded. This version is now active.`;
 
-            // Reset form
-            e.target.reset();
+                // Reset form
+                e.target.reset();
 
-            // Reload versions list
-            setTimeout(() => {
-                loadVersions();
-                statusDiv.style.display = 'none';
-            }, 3000);
-        } else {
+                // Reload versions list
+                setTimeout(() => {
+                    loadVersions();
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            } else {
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `Error: ${result.detail || 'Upload failed'}`;
+            }
+        } catch (error) {
             statusDiv.className = 'status-message error';
-            statusDiv.textContent = `Error: ${result.detail || 'Upload failed'}`;
+            statusDiv.textContent = `Error: ${error.message}`;
         }
-    } catch (error) {
-        statusDiv.className = 'status-message error';
-        statusDiv.textContent = `Error: ${error.message}`;
-    }
-});
+    });
 
-// Update file input accept attribute based on platform
-document.getElementById('platform').addEventListener('change', (e) => {
-    const fileInput = document.getElementById('file');
-    const platform = e.target.value;
+    // Update file input accept attribute based on platform
+    document.getElementById('platform').addEventListener('change', (e) => {
+        const fileInput = document.getElementById('file');
+        const platform = e.target.value;
 
-    if (platform === 'windows') {
-        fileInput.accept = '.exe,.zip';
-    } else if (platform === 'macos') {
-        fileInput.accept = '.app,.zip';
-    } else {
-        fileInput.accept = '';
-    }
-});
+        if (platform === 'windows') {
+            fileInput.accept = '.exe,.zip';
+        } else if (platform === 'macos') {
+            fileInput.accept = '.app,.zip';
+        } else {
+            fileInput.accept = '';
+        }
+    });
+}
 
 // Load versions from server
 async function loadVersions() {
@@ -383,11 +388,16 @@ async function loadVersions() {
             html += `<td>${statusBadge}</td>`;
             html += '<td><div class="action-buttons">';
 
-            if (!isCurrent) {
-                html += `<button class="btn btn-secondary btn-small" onclick="setActiveVersion('${version.version}')">Set Active</button>`;
+            // Download button - visible to all users
+            html += `<button class="btn btn-primary btn-small" onclick="downloadVersion('${version.version}')">Download</button>`;
+
+            // Admin-only buttons
+            if (isAdmin) {
+                if (!isCurrent) {
+                    html += `<button class="btn btn-secondary btn-small" onclick="setActiveVersion('${version.version}')">Set Active</button>`;
+                }
+                html += `<button class="btn btn-danger btn-small" onclick="deleteVersion('${version.version}', ${isCurrent})">Delete</button>`;
             }
-            // Always show delete button
-            html += `<button class="btn btn-danger btn-small" onclick="deleteVersion('${version.version}', ${isCurrent})">Delete</button>`;
 
             html += '</div></td>';
             html += '</tr>';
@@ -403,6 +413,12 @@ async function loadVersions() {
         errorDiv.style.display = 'block';
         errorDiv.textContent = `Error loading versions: ${error.message}`;
     }
+}
+
+// Download a version
+function downloadVersion(version) {
+    // Create a link and trigger download
+    window.location.href = `/admin/api/downloads/download/${version}`;
 }
 
 // Set a version as active

@@ -103,12 +103,16 @@
             <h1 class="header-title">AlderSync Admin</h1>
             <nav>
                 <ul class="nav-links">
+                    {% if is_admin %}
                     <li><a href="/admin/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a></li>
                     <li><a href="/admin/users" class="{% if active_page == 'users' %}active{% endif %}">Users</a></li>
                     <li><a href="/admin/files" class="{% if active_page == 'files' %}active{% endif %}">Files</a></li>
                     <li><a href="/admin/operations" class="{% if active_page == 'operations' %}active{% endif %}">Operations</a></li>
+                    {% endif %}
                     <li><a href="/admin/downloads" class="{% if active_page == 'downloads' %}active{% endif %}">Downloads</a></li>
+                    {% if is_admin %}
                     <li><a href="/admin/settings" class="{% if active_page == 'settings' %}active{% endif %}">Settings</a></li>
+                    {% endif %}
                     <li class="nav-dropdown">
                         <a href="/admin/docs/user" class="{% if active_page == 'docs' %}active{% endif %}">Docs</a>
                         <div class="nav-dropdown-content">
@@ -183,10 +187,8 @@
         });
 
         function logout() {
-            // Clear session cookie
-            document.cookie = "admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            // Redirect to login
-            window.location.href = "/admin/login";
+            // Redirect to logout endpoint which will clear session and cookie
+            window.location.href = "/admin/logout";
         }
     </script>
     {% block extra_scripts %}{% endblock %}
