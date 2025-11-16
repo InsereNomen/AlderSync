@@ -20,7 +20,8 @@ from PyInstaller.utils.hooks import collect_all
 block_cipher = None
 
 # Get the absolute path to the icon file
-ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aldersync_icon.ico')
+# SPECPATH is a PyInstaller variable containing the directory of this spec file
+ICON_PATH = os.path.join(SPECPATH, 'aldersync_icon.ico')
 
 # Collect all keyring backends and dependencies
 # keyring uses dynamic imports that PyInstaller can't auto-detect
