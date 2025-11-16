@@ -14,9 +14,13 @@ Output:
 """
 
 import sys
+import os
 from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
+
+# Get the absolute path to the icon file
+ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aldersync_icon.ico')
 
 # Collect all keyring backends and dependencies
 # keyring uses dynamic imports that PyInstaller can't auto-detect
@@ -102,7 +106,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='aldersync_icon.ico',
+    icon=ICON_PATH if sys.platform == 'win32' else None,
 )
 
 # Mac-specific bundle (only on macOS)
