@@ -207,15 +207,34 @@ if __name__ == "__main__":
     
     logger.info("Starting AlderSync Server...")
 
+    # Determine SSL certificate paths
+    server_dir = Path(__file__).parent
+    cert_file = server_dir / "cert.pem"
+    key_file = server_dir / "key.pem"
+
+    # Check if SSL certificates exist
+    if not cert_file.exists() or not key_file.exists():
+        logger.error("SSL certificates not found!")
+        logger.error(f"Expected certificate at: {cert_file}")
+        logger.error(f"Expected key at: {key_file}")
+        logger.error("Run 'python generate_ssl_cert.py' to generate self-signed certificates")
+        raise FileNotFoundError("SSL certificates not found. HTTPS is required for AlderSync.")
+
+    logger.info(f"Using SSL certificate: {cert_file}")
+    logger.info(f"Using SSL key: {key_file}")
+
     # Run server with uvicorn
     # host="0.0.0.0" allows connections from other machines on the network
     # port=8000 is the default for this application
     # reload=False: Auto-reload disabled to prevent spurious log messages from
     #               file monitoring. Manually restart server after code changes.
+    # ssl_keyfile and ssl_certfile: Enable HTTPS with self-signed certificates
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
         port=8000,
         reload=False,
-        log_level="info"
+        log_level="info",
+        ssl_keyfile=str(key_file),
+        ssl_certfile=str(cert_file)
     )

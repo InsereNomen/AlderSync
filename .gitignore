@@ -57,6 +57,7 @@ client_downloads/*
 config.json
 credentials.json
 *.env
+*.pem  # SSL certificates and private keys
 
 # Communication with Claude
 errors.txt

@@ -258,55 +258,67 @@ Configure the server to start automatically on boot.
 
 ## SSL Certificate Setup
 
-**IMPORTANT**: Always use HTTPS in production when accessing over the internet!
+**IMPORTANT**: HTTPS is REQUIRED for AlderSync. The server will not start without SSL certificates!
 
-### Option 1: Self-Signed Certificate (Home/Church Use)
+### Generate Self-Signed Certificate (Recommended for Home/Church Use)
 
-Generate a self-signed certificate:
+AlderSync includes a script to generate self-signed certificates automatically:
 
+**Linux/Mac:**
 ```bash
 cd /opt/aldersync
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+source venv/bin/activate
+python generate_ssl_cert.py
 ```
 
-Start server with SSL:
+**Windows:**
+```cmd
+cd C:\aldersync
+venv\Scripts\activate
+python generate_ssl_cert.py
+```
 
+This will create:
+- `cert.pem` - SSL certificate (valid for 10 years)
+- `key.pem` - Private key
+
+**Note**: Clients will need to disable SSL verification (`verify_ssl: false` in client config) or manually trust the certificate.
+
+### Alternative: Use Existing SSL Certificates
+
+If you have your own SSL certificates (e.g., from Let's Encrypt), place them in the server directory:
+
+1. Copy your certificate to `cert.pem`
+2. Copy your private key to `key.pem`
+
+**Let's Encrypt Example:**
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 8000 --ssl-keyfile key.pem --ssl-certfile cert.pem
+# Copy Let's Encrypt certificates
+sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem /opt/aldersync/cert.pem
+sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem /opt/aldersync/key.pem
+sudo chown aldersync:aldersync /opt/aldersync/*.pem
+chmod 600 /opt/aldersync/key.pem
+chmod 644 /opt/aldersync/cert.pem
 ```
 
-**Note**: Clients will need to disable SSL verification or accept the certificate manually.
+### Starting the Server
 
-### Option 2: Let's Encrypt (If You Have a Domain)
+Simply run:
 
-If you have a domain name pointing to your server:
-
-1. Install certbot:
-   ```bash
-   sudo apt-get install certbot  # Debian/Ubuntu
-   ```
-
-2. Obtain certificate:
-   ```bash
-   sudo certbot certonly --standalone -d your-domain.com
-   ```
-
-3. Start server with Let's Encrypt certificate:
-   ```bash
-   uvicorn server:app --host 0.0.0.0 --port 8000 \
-     --ssl-keyfile /etc/letsencrypt/live/your-domain.com/privkey.pem \
-     --ssl-certfile /etc/letsencrypt/live/your-domain.com/fullchain.pem
-   ```
-
-### Option 3: No SSL (Local Network Only)
-
-If only accessing on local network:
-
+**Linux/Mac:**
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 8000
+python server.py
 ```
 
-**Warning**: Do NOT expose this to the internet without SSL!
+**Windows:**
+```cmd
+python server.py
+```
+
+The server will automatically:
+- Load SSL certificates from `cert.pem` and `key.pem`
+- Start with HTTPS on port 8000
+- Display an error if certificates are missing
 
 ---
 
@@ -439,8 +451,9 @@ pip install -r requirements.txt --upgrade
 
 2. **Test local connection**:
    ```bash
-   curl http://localhost:8000/health
+   curl -k https://localhost:8000/health
    # Should return: {"status":"healthy"}
+   # Note: -k flag disables SSL verification for self-signed certificates
    ```
 
 3. **Check firewall**:
@@ -497,8 +510,10 @@ chmod 600 /opt/aldersync/aldersync.db  # Database should be private
 
 2. **Access the correct URL**:
    ```
-   http://your-server-ip:8000/admin
+   https://your-server-ip:8000/admin
    ```
+
+   **Note**: You may need to accept the self-signed certificate warning in your browser.
 
 3. **Check browser console** for JavaScript errors
 
