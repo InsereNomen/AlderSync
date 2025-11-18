@@ -11,6 +11,9 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt .
 
+# Install system dependencies (curl for healthcheck)
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Install Python dependencies
 # Note: Not upgrading pip to avoid potential Docker/WSL2 issues
 RUN pip install --no-cache-dir -r requirements.txt
@@ -36,13 +39,15 @@ EXPOSE 8000
 
 # Add health check to verify server is running
 # Checks the /health endpoint every 30 seconds
+# Uses curl with -k to accept self-signed certificates
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD curl -f -k https://localhost:8000/health || exit 1
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 
-# Run the server using uvicorn
-# host 0.0.0.0 allows external connections
-# port 8000 is the standard AlderSync port
-CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the server using server.py
+# This ensures SSL certificate setup code is executed
+# The server.py script will check for SSL_DIR environment variable
+# and configure HTTPS accordingly
+CMD ["python", "server.py"]
