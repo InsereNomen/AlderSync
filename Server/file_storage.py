@@ -21,6 +21,7 @@ from sqlalchemy import func
 
 from models.database import File
 from managers.database_manager import DatabaseManager
+from ignore_patterns import PatternMatcher, LoadPatternsFromDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +174,40 @@ def CalculateFileHash(file_path: Path, chunk_size: int = 8192) -> str:
         raise IOError(f"Failed to calculate hash: {str(e)}")
 
 
+# ==================== Ignore Pattern Filtering ====================
+
+def FilterIgnoredFiles(db_manager: DatabaseManager, file_list: List[dict]) -> List[dict]:
+    """
+    Filter out files that match ignore patterns
+
+    Args:
+        db_manager: DatabaseManager instance
+        file_list: List of file metadata dictionaries
+
+    Returns:
+        List of files that should NOT be ignored
+    """
+    # Load patterns from database
+    pattern_strings = LoadPatternsFromDatabase(db_manager)
+
+    if not pattern_strings:
+        # No patterns defined, return all files
+        return file_list
+
+    # Create pattern matcher
+    matcher = PatternMatcher(pattern_strings)
+
+    # Filter files
+    filtered = []
+    for file_dict in file_list:
+        if not matcher.ShouldIgnore(file_dict['path']):
+            filtered.append(file_dict)
+        else:
+            logger.debug(f"Ignoring file due to pattern match: {file_dict['path']}")
+
+    return filtered
+
+
 # ==================== File Metadata Management ====================
 
 def StoreFileMetadata(db_manager: DatabaseManager, relative_path: str, service_type: str,
@@ -294,7 +329,7 @@ def GetFileMetadata(db_manager: DatabaseManager, relative_path: str, service_typ
 
 
 def ListFiles(db_manager: DatabaseManager, service_type: str,
-             include_deleted: bool = False) -> List[dict]:
+             include_deleted: bool = False, apply_ignore_patterns: bool = True) -> List[dict]:
     """
     List all files for a service type (current versions only, not revisions)
 
@@ -305,6 +340,7 @@ def ListFiles(db_manager: DatabaseManager, service_type: str,
         db_manager: DatabaseManager instance
         service_type: 'Contemporary' or 'Traditional'
         include_deleted: Whether to include deleted files
+        apply_ignore_patterns: Whether to filter out ignored files (default True)
 
     Returns:
         List[dict]: List of file metadata dictionaries
@@ -348,6 +384,10 @@ def ListFiles(db_manager: DatabaseManager, service_type: str,
                 'revision': file_record.revision,
                 'user_id': file_record.user_id
             })
+
+        # Apply ignore patterns if requested
+        if apply_ignore_patterns:
+            file_list = FilterIgnoredFiles(db_manager, file_list)
 
         return file_list
 

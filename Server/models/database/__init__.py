@@ -18,6 +18,7 @@ from models.database.changelist import Changelist
 from models.database.operation import Operation
 from models.database.setting import Setting
 from models.database.last_operation import LastOperation
+from models.database.ignore_pattern import IgnorePattern
 
 # Export all models and Base
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     'Operation',
     'Setting',
     'LastOperation',
+    'IgnorePattern',
 ]

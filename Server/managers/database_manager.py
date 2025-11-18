@@ -17,7 +17,7 @@ import bcrypt
 
 from models.database import (
     Base, Role, Permission, RolePermission,
-    User, File, Operation, Setting, LastOperation
+    User, File, Operation, Setting, LastOperation, IgnorePattern
 )
 
 
@@ -90,6 +90,9 @@ class DatabaseManager:
 
             # Populate default settings if not present
             self.PopulateDefaultSettings(session)
+
+            # Populate default ignore patterns if not present
+            self.PopulateDefaultIgnorePatterns(session)
 
             # Initialize last_operation table with empty row if not present
             last_op_count = session.query(LastOperation).count()
@@ -215,6 +218,30 @@ class DatabaseManager:
                 setting = Setting(key=key, value=value)
                 session.add(setting)
                 print(f"Added default setting: {key} = {value}")
+
+    def PopulateDefaultIgnorePatterns(self, session):
+        """
+        Populate default ignore patterns (similar to .gitignore)
+        Only adds patterns that don't already exist
+
+        Args:
+            session: SQLAlchemy session
+        """
+        default_patterns = [
+            ("*.tmp", "Temporary files"),
+            ("*.log", "Log files"),
+            (".DS_Store", "macOS metadata files"),
+            ("Thumbs.db", "Windows thumbnail cache"),
+            ("desktop.ini", "Windows folder settings"),
+        ]
+
+        for pattern, description in default_patterns:
+            # Check if pattern already exists
+            existing = session.query(IgnorePattern).filter(IgnorePattern.pattern == pattern).first()
+            if not existing:
+                ignore = IgnorePattern(pattern=pattern, description=description)
+                session.add(ignore)
+                print(f"Added default ignore pattern: {pattern}")
 
     @staticmethod
     def GenerateRandomPassword(length: int = 12) -> str:

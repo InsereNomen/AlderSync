@@ -11,11 +11,13 @@ import os
 import shutil
 import hashlib
 import logging
+import sys
 from pathlib import Path
 from typing import Optional, Callable, List, Dict, Any
 from datetime import datetime
 
 from exceptions import AlderSyncAdminCancelledError
+from ignore_patterns import IgnorePatternManager
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -51,6 +53,22 @@ class SyncOperations:
         self.cancel_requested: bool = False
         self.backup_path: Optional[Path] = None
 
+        # Initialize ignore pattern manager
+        # Get executable directory
+        if getattr(sys, 'frozen', False):
+            # Running as compiled executable
+            executable_dir = Path(sys.executable).parent
+        else:
+            # Running as script
+            executable_dir = Path(__file__).parent.parent
+
+        self.ignore_mgr = IgnorePatternManager(
+            executable_dir=executable_dir,
+            propresenter_root=folder_manager.propresenter_folder
+        )
+        # Load patterns on initialization
+        self.ignore_mgr.LoadPatterns()
+
     def pull(self, service_type: str, progress_callback: Optional[Callable] = None) -> bool:
         """
         Pull files from server (download newer files).
@@ -72,6 +90,8 @@ class SyncOperations:
             True if pull succeeded, False otherwise
         """
         self.cancel_requested = False
+        # Reload ignore patterns in case they changed
+        self.ignore_mgr.LoadPatterns()
         logger.info(f"Starting Pull operation for {service_type} service")
 
         if progress_callback:
@@ -341,6 +361,8 @@ class SyncOperations:
             True if push succeeded, False otherwise
         """
         self.cancel_requested = False
+        # Reload ignore patterns in case they changed
+        self.ignore_mgr.LoadPatterns()
         logger.info(f"Starting Push operation for {service_type} service")
 
         if progress_callback:
@@ -384,15 +406,21 @@ class SyncOperations:
 
             # Get all local files recursively
             local_files = []
+            ignored_count = 0
             for file_path in propresenter_folder.rglob("*"):
                 if file_path.is_file():
+                    # Skip ignored files
+                    if self.ignore_mgr.ShouldIgnore(file_path):
+                        ignored_count += 1
+                        continue
+
                     # Calculate relative path from ProPresenter folder
                     rel_path = file_path.relative_to(propresenter_folder)
                     # Convert to forward slashes for consistency with server
                     rel_path_str = str(rel_path).replace("\\", "/")
                     local_files.append((rel_path_str, file_path))
 
-            logger.info(f"Found {len(local_files)} local files")
+            logger.info(f"Found {len(local_files)} local files ({ignored_count} ignored)")
 
             # Step 4: Determine which files need to be uploaded or deleted
             files_to_upload = []
@@ -544,6 +572,8 @@ class SyncOperations:
             True if reconcile succeeded, False otherwise
         """
         self.cancel_requested = False
+        # Reload ignore patterns in case they changed
+        self.ignore_mgr.LoadPatterns()
         logger.info(f"Starting Reconcile operation for {service_type} service")
 
         if progress_callback:
@@ -559,8 +589,14 @@ class SyncOperations:
 
             logger.info("Scanning local files for Reconcile operation")
             local_files = {}
+            ignored_count = 0
             for file_path in propresenter_folder.rglob("*"):
                 if file_path.is_file():
+                    # Skip ignored files
+                    if self.ignore_mgr.ShouldIgnore(file_path):
+                        ignored_count += 1
+                        continue
+
                     # Calculate relative path from ProPresenter folder
                     rel_path = file_path.relative_to(propresenter_folder)
                     # Convert to forward slashes for consistency with server
@@ -583,7 +619,7 @@ class SyncOperations:
                         "modified_utc": mtime_iso
                     }
 
-            logger.info(f"Found {len(local_files)} local files")
+            logger.info(f"Found {len(local_files)} local files ({ignored_count} ignored)")
 
             # Step 2: Begin Reconcile transaction with server, sending client files
             logger.info("Beginning Reconcile transaction with server")

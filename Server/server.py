@@ -171,6 +171,7 @@ from routes import status, version, auth, files, transactions_control, transacti
 from routes.admin import auth as admin_auth, users as admin_users, roles as admin_roles
 from routes.admin import operations as admin_operations, files as admin_files
 from routes.admin import settings as admin_settings, downloads as admin_downloads, docs as admin_docs
+from routes.admin import ignore_patterns as admin_ignore_patterns
 
 
 # ==================== Include Routers ====================
@@ -192,6 +193,7 @@ app.include_router(admin_files.router)
 app.include_router(admin_settings.router)
 app.include_router(admin_downloads.router)
 app.include_router(admin_docs.router)
+app.include_router(admin_ignore_patterns.router)
 
 
 # ==================== Main Entry Point ====================
