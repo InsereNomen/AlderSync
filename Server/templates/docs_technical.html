@@ -275,11 +275,12 @@
                 <li><a href="#auth">6. Authentication & RBAC</a></li>
                 <li><a href="#transactions">7. Transaction System</a></li>
                 <li><a href="#file-storage">8. File Storage & Versioning</a></li>
-                <li><a href="#client">9. Client Architecture</a></li>
-                <li><a href="#claude">10. Using Claude Code</a></li>
-                <li><a href="#development">11. Development Workflow</a></li>
-                <li><a href="#testing">12. Testing</a></li>
-                <li><a href="#deployment">13. Building & Deployment</a></li>
+                <li><a href="#ignore-patterns">9. Ignore Patterns</a></li>
+                <li><a href="#client">10. Client Architecture</a></li>
+                <li><a href="#claude">11. Using Claude Code</a></li>
+                <li><a href="#development">12. Development Workflow</a></li>
+                <li><a href="#testing">13. Testing</a></li>
+                <li><a href="#deployment">14. Building & Deployment</a></li>
             </ul>
         </div>
 
@@ -1453,9 +1454,223 @@ Server/storage/
                 </div>
             </div>
 
-            <!-- Section 9: Client Architecture -->
+            <!-- Section 9: Ignore Patterns -->
+            <div class="docs-section" id="ignore-patterns">
+                <h2>9. Ignore Patterns</h2>
+
+                <p>AlderSync implements .gitignore-style pattern matching to exclude files from sync operations on both Server and Client.</p>
+
+                <h3>Architecture Overview</h3>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Location</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Server Patterns</td>
+                        <td>Database table <code>ignore_patterns</code></td>
+                        <td>Server-wide file filtering</td>
+                    </tr>
+                    <tr>
+                        <td>Client Global Patterns</td>
+                        <td><code>.aldersyncignore</code> next to executable</td>
+                        <td>Client-wide file filtering</td>
+                    </tr>
+                    <tr>
+                        <td>Client Directory Patterns</td>
+                        <td><code>.aldersyncignore</code> in directories</td>
+                        <td>Directory-specific filtering (applies to subdirectories)</td>
+                    </tr>
+                </table>
+
+                <h3>Server Implementation</h3>
+
+                <h4>Database Model</h4>
+                <div class="code-block">
+# Server/models/database/ignore_pattern.py<br>
+class IgnorePattern(Base):<br>
+    __tablename__ = "ignore_patterns"<br>
+    <br>
+    pattern_id = Column(Integer, primary_key=True)<br>
+    pattern = Column(String, nullable=False)  # e.g., "*.tmp"<br>
+    description = Column(String, nullable=True)<br>
+    created_at = Column(DateTime)
+                </div>
+
+                <h4>Pattern Matching Module</h4>
+                <div class="code-block">
+# Server/ignore_patterns.py<br>
+class PatternMatcher:<br>
+    def __init__(self, patterns: List[str])<br>
+    def ShouldIgnore(self, file_path: str) -> bool<br>
+    def MatchesPattern(self, file_path: str, pattern: str) -> bool<br>
+    def FilterPaths(self, paths: List[str]) -> List[str]
+                </div>
+
+                <h4>File Storage Integration</h4>
+                <p>The <code>ListFiles()</code> function in <code>file_storage.py</code> applies ignore patterns:</p>
+                <div class="code-block">
+def ListFiles(db_manager, service_type, apply_ignore_patterns=True):<br>
+    # Query database for files<br>
+    files = query.all()<br>
+    <br>
+    # Apply ignore patterns if requested<br>
+    if apply_ignore_patterns:<br>
+        file_list = FilterIgnoredFiles(db_manager, file_list)<br>
+    <br>
+    return file_list
+                </div>
+
+                <h4>Admin API Endpoints</h4>
+                <table>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td><code>/admin/api/ignore-patterns</code></td>
+                        <td>GET</td>
+                        <td>List all patterns</td>
+                    </tr>
+                    <tr>
+                        <td><code>/admin/api/ignore-patterns</code></td>
+                        <td>POST</td>
+                        <td>Create new pattern</td>
+                    </tr>
+                    <tr>
+                        <td><code>/admin/api/ignore-patterns/{id}</code></td>
+                        <td>PUT</td>
+                        <td>Update pattern</td>
+                    </tr>
+                    <tr>
+                        <td><code>/admin/api/ignore-patterns/{id}</code></td>
+                        <td>DELETE</td>
+                        <td>Delete pattern</td>
+                    </tr>
+                </table>
+
+                <h3>Client Implementation</h3>
+
+                <h4>Pattern Manager</h4>
+                <div class="code-block">
+# Client/ignore_patterns.py<br>
+class IgnorePatternManager:<br>
+    def __init__(self, executable_dir, propresenter_root)<br>
+    def LoadPatterns()  # Load from files<br>
+    def ShouldIgnore(self, file_path: Path) -> bool<br>
+    def FilterFiles(self, file_paths: List[Path]) -> List[Path]
+                </div>
+
+                <h4>Sync Operations Integration</h4>
+                <p>All sync operations (Pull, Push, Reconcile) filter local files:</p>
+                <div class="code-block">
+# In SyncOperations class<br>
+for file_path in propresenter_folder.rglob("*"):<br>
+    if file_path.is_file():<br>
+        # Skip ignored files<br>
+        if self.ignore_mgr.ShouldIgnore(file_path):<br>
+            ignored_count += 1<br>
+            continue<br>
+        <br>
+        # Process file...
+                </div>
+
+                <h3>Pattern Syntax</h3>
+
+                <p>Both Server and Client support the same pattern syntax (gitignore-compatible):</p>
+
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Syntax</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td>Wildcards</td>
+                        <td><code>*</code>, <code>?</code>, <code>[abc]</code></td>
+                        <td><code>*.tmp</code>, <code>file?.txt</code></td>
+                    </tr>
+                    <tr>
+                        <td>Directories</td>
+                        <td>Trailing <code>/</code></td>
+                        <td><code>cache/</code></td>
+                    </tr>
+                    <tr>
+                        <td>Path patterns</td>
+                        <td>Contains <code>/</code></td>
+                        <td><code>logs/*.txt</code></td>
+                    </tr>
+                    <tr>
+                        <td>Negation</td>
+                        <td><code>!</code> prefix</td>
+                        <td><code>!important.log</code></td>
+                    </tr>
+                    <tr>
+                        <td>Comments</td>
+                        <td><code>#</code> prefix</td>
+                        <td><code># Temporary files</code></td>
+                    </tr>
+                </table>
+
+                <h3>Pattern Matching Algorithm</h3>
+
+                <ol>
+                    <li>Parse patterns into (pattern, is_negation) tuples, skipping comments and blank lines</li>
+                    <li>Normalize file path to forward slashes</li>
+                    <li>For each pattern:
+                        <ul>
+                            <li>If pattern contains <code>/</code>, match against full path</li>
+                            <li>Otherwise, match against each path component</li>
+                            <li>Use Python's <code>fnmatch</code> for wildcard matching</li>
+                        </ul>
+                    </li>
+                    <li>Track ignore state - last matching pattern wins</li>
+                    <li>Negation patterns flip the ignore state</li>
+                </ol>
+
+                <h3>Default Patterns</h3>
+
+                <p>The server is initialized with these default patterns:</p>
+
+                <div class="code-block">
+default_patterns = [<br>
+    ("*.tmp", "Temporary files"),<br>
+    ("*.log", "Log files"),<br>
+    (".DS_Store", "macOS metadata files"),<br>
+    ("Thumbs.db", "Windows thumbnail cache"),<br>
+    ("desktop.ini", "Windows folder settings"),<br>
+]
+                </div>
+
+                <h3>Testing</h3>
+
+                <p>Test suites for ignore patterns:</p>
+                <ul>
+                    <li><code>Server/tests/test_ignore_patterns.py</code> - Server pattern matching tests</li>
+                    <li><code>Client/tests/test_ignore_patterns.py</code> - Client pattern manager tests</li>
+                </ul>
+
+                <p>Tests cover:</p>
+                <ul>
+                    <li>Wildcard pattern matching</li>
+                    <li>Directory pattern matching</li>
+                    <li>Negation patterns</li>
+                    <li>Comment and blank line handling</li>
+                    <li>Path filtering</li>
+                    <li>Hierarchical ignore files (Client)</li>
+                </ul>
+
+                <div class="tip-box">
+                    <strong>Design Decision:</strong> Server and Client ignore independently. This allows administrators to enforce server-side filtering while giving users control over their local sync behavior. Both filters are AND-ed together - a file must pass both to sync.
+                </div>
+            </div>
+
+            <!-- Section 10: Client Architecture -->
             <div class="docs-section" id="client">
-                <h2>9. Client Architecture</h2>
+                <h2>10. Client Architecture</h2>
 
                 <h3>Client Components</h3>
 
@@ -1568,9 +1783,9 @@ password = keyring.get_password(<span class="code-string">"aldersync"</span>, us
                 </div>
             </div>
 
-            <!-- Section 10: Using Claude Code -->
+            <!-- Section 11: Using Claude Code -->
             <div class="docs-section" id="claude">
-                <h2>10. Using Claude Code</h2>
+                <h2>11. Using Claude Code</h2>
 
                 <p>AlderSync was developed with Claude Code (claude.ai/code), an AI assistant that can read, understand, and modify codebases. The project includes <code>CLAUDE.md</code> with instructions for Claude.</p>
 
@@ -1739,9 +1954,9 @@ All tests passed! The new permission system is working correctly.
                 </div>
             </div>
 
-            <!-- Section 11: Development Workflow -->
+            <!-- Section 12: Development Workflow -->
             <div class="docs-section" id="development">
-                <h2>11. Development Workflow</h2>
+                <h2>12. Development Workflow</h2>
 
                 <h3>Setting Up Development Environment</h3>
 
@@ -1838,9 +2053,9 @@ git push origin master
                 </ul>
             </div>
 
-            <!-- Section 12: Testing -->
+            <!-- Section 13: Testing -->
             <div class="docs-section" id="testing">
-                <h2>12. Testing</h2>
+                <h2>13. Testing</h2>
 
                 <h3>Test Structure</h3>
 
@@ -1972,9 +2187,9 @@ BASE_URL = <span class="code-string">"http://localhost:8000"</span>
                 </table>
             </div>
 
-            <!-- Section 13: Building & Deployment -->
+            <!-- Section 14: Building & Deployment -->
             <div class="docs-section" id="deployment">
-                <h2>13. Building & Deployment</h2>
+                <h2>14. Building & Deployment</h2>
 
                 <h3>Building Client Executables</h3>
 

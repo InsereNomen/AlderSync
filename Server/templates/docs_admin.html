@@ -272,11 +272,12 @@
                 <li><a href="#operations">7. Operations Monitoring</a></li>
                 <li><a href="#file-mgmt">8. File Management</a></li>
                 <li><a href="#settings">9. Server Settings</a></li>
-                <li><a href="#downloads">10. Client Downloads</a></li>
-                <li><a href="#backup">11. Backup & Recovery</a></li>
-                <li><a href="#updates">12. Updating AlderSync</a></li>
-                <li><a href="#monitoring">13. Monitoring & Logs</a></li>
-                <li><a href="#troubleshooting">14. Troubleshooting</a></li>
+                <li><a href="#ignore-patterns">10. Ignore Patterns</a></li>
+                <li><a href="#downloads">11. Client Downloads</a></li>
+                <li><a href="#backup">12. Backup & Recovery</a></li>
+                <li><a href="#updates">13. Updating AlderSync</a></li>
+                <li><a href="#monitoring">14. Monitoring & Logs</a></li>
+                <li><a href="#troubleshooting">15. Troubleshooting</a></li>
             </ul>
         </div>
 
@@ -1145,9 +1146,168 @@ Server/storage/<br>
                 </div>
             </div>
 
-            <!-- Section 10: Client Downloads -->
+            <!-- Section 10: Ignore Patterns -->
+            <div class="docs-section" id="ignore-patterns">
+                <h2>10. Ignore Patterns</h2>
+
+                <p>Navigate to <strong>Ignore Patterns</strong> tab to manage server-side file ignore rules.</p>
+
+                <h3>What are Ignore Patterns?</h3>
+
+                <p>Ignore patterns work like <code>.gitignore</code> files - they tell the server which files to exclude from all sync operations. Files matching ignore patterns are:</p>
+
+                <ul>
+                    <li>Not listed in file inventories sent to clients</li>
+                    <li>Not accepted during uploads (Push/Reconcile)</li>
+                    <li>Not sent during downloads (Pull/Reconcile)</li>
+                    <li>Completely invisible to sync operations</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Note:</strong> Server ignore patterns are independent from client ignore patterns. Both server and client apply their own filters, so a file must pass both to be synced.
+                </div>
+
+                <h3>Pattern Syntax</h3>
+
+                <p>Ignore patterns support the same syntax as <code>.gitignore</code>:</p>
+
+                <table>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Example</th>
+                        <th>Matches</th>
+                    </tr>
+                    <tr>
+                        <td>Wildcards (*)</td>
+                        <td><code>*.tmp</code></td>
+                        <td>All files ending in .tmp</td>
+                    </tr>
+                    <tr>
+                        <td>Wildcards (?)</td>
+                        <td><code>file?.txt</code></td>
+                        <td>file1.txt, fileA.txt, etc.</td>
+                    </tr>
+                    <tr>
+                        <td>Character sets</td>
+                        <td><code>[abc].txt</code></td>
+                        <td>a.txt, b.txt, c.txt</td>
+                    </tr>
+                    <tr>
+                        <td>Directories</td>
+                        <td><code>cache/</code></td>
+                        <td>cache directory and all contents</td>
+                    </tr>
+                    <tr>
+                        <td>Path patterns</td>
+                        <td><code>logs/*.txt</code></td>
+                        <td>All .txt files in logs folder</td>
+                    </tr>
+                    <tr>
+                        <td>Negation</td>
+                        <td><code>!important.log</code></td>
+                        <td>Un-ignores a previously ignored file</td>
+                    </tr>
+                    <tr>
+                        <td>Comments</td>
+                        <td><code># Comment</code></td>
+                        <td>Ignored, used for documentation</td>
+                    </tr>
+                </table>
+
+                <h3>Default Ignore Patterns</h3>
+
+                <p>AlderSync comes with sensible default patterns to exclude common system files:</p>
+
+                <ul>
+                    <li><code>*.tmp</code> - Temporary files</li>
+                    <li><code>*.log</code> - Log files</li>
+                    <li><code>.DS_Store</code> - macOS metadata files</li>
+                    <li><code>Thumbs.db</code> - Windows thumbnail cache</li>
+                    <li><code>desktop.ini</code> - Windows folder settings</li>
+                </ul>
+
+                <h3>Managing Ignore Patterns</h3>
+
+                <p><span class="step-number">1</span> Navigate to <strong>Ignore Patterns</strong> in the admin interface</p>
+                <p><span class="step-number">2</span> Click <strong>+ Add Pattern</strong> to create a new pattern</p>
+                <p><span class="step-number">3</span> Enter the pattern (e.g., <code>*.backup</code>) and optional description</p>
+                <p><span class="step-number">4</span> Click <strong>Save</strong> to activate the pattern</p>
+
+                <h3>Editing and Deleting Patterns</h3>
+
+                <p>In the pattern list:</p>
+                <ul>
+                    <li>Click <strong>Edit</strong> to modify a pattern or description</li>
+                    <li>Click <strong>Delete</strong> to remove a pattern</li>
+                    <li>Changes take effect immediately for all future operations</li>
+                </ul>
+
+                <h3>Common Patterns</h3>
+
+                <p>Here are some commonly useful ignore patterns:</p>
+
+                <div class="command-box">
+# Backup files<br>
+*.backup<br>
+*.bak<br>
+*~<br>
+<br>
+# Version control<br>
+.git/<br>
+.svn/<br>
+<br>
+# Build artifacts<br>
+build/<br>
+dist/<br>
+*.pyc<br>
+<br>
+# Editor files<br>
+.vscode/<br>
+.idea/<br>
+*.swp<br>
+<br>
+# OS files<br>
+.DS_Store<br>
+Thumbs.db<br>
+desktop.ini
+                </div>
+
+                <div class="warning-box">
+                    <strong>Important:</strong> Once a file is ignored, it will not sync even if clients request it. Make sure your patterns don't accidentally exclude important files!
+                </div>
+
+                <h3>Testing Patterns</h3>
+
+                <p>To verify your patterns work as expected:</p>
+
+                <ul>
+                    <li>Add the pattern in the admin interface</li>
+                    <li>Check the Files page to confirm matching files are not listed</li>
+                    <li>Attempt a sync operation - ignored files should not be transferred</li>
+                    <li>Review server logs for "Ignoring file due to pattern match" messages</li>
+                </ul>
+
+                <h3>Pattern Order and Precedence</h3>
+
+                <p>When multiple patterns could match a file:</p>
+
+                <ul>
+                    <li>All patterns are evaluated</li>
+                    <li>The <strong>last matching pattern wins</strong></li>
+                    <li>Use negation (<code>!</code>) to un-ignore files that match earlier patterns</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Example:</strong> To ignore all .log files except important.log:<br>
+                    1. Add pattern: <code>*.log</code><br>
+                    2. Add pattern: <code>!important.log</code><br>
+                    The second pattern negates the first for that specific file.
+                </div>
+            </div>
+
+            <!-- Section 11: Client Downloads -->
             <div class="docs-section" id="downloads">
-                <h2>10. Client Downloads</h2>
+                <h2>11. Client Downloads</h2>
 
                 <p>Navigate to <strong>Downloads</strong> tab to manage client executable downloads.</p>
 
@@ -1240,9 +1400,9 @@ Server/storage/<br>
                 </div>
             </div>
 
-            <!-- Section 11: Backup & Recovery -->
+            <!-- Section 12: Backup & Recovery -->
             <div class="docs-section" id="backup">
-                <h2>11. Backup & Recovery</h2>
+                <h2>12. Backup & Recovery</h2>
 
                 <p>Regular backups are essential for disaster recovery.</p>
 
@@ -1400,9 +1560,9 @@ tar -xzf /backups/aldersync-storage-20251113.tar.gz -C /opt/aldersync/
                 </div>
             </div>
 
-            <!-- Section 12: Updating AlderSync -->
+            <!-- Section 13: Updating AlderSync -->
             <div class="docs-section" id="updates">
-                <h2>12. Updating AlderSync</h2>
+                <h2>13. Updating AlderSync</h2>
 
                 <p>Keep AlderSync up to date for bug fixes, security patches, and new features.</p>
 
@@ -1527,9 +1687,9 @@ tail -f /opt/aldersync/Server/logs/aldersync-server-*.log
                 </div>
             </div>
 
-            <!-- Section 13: Monitoring & Logs -->
+            <!-- Section 14: Monitoring & Logs -->
             <div class="docs-section" id="monitoring">
-                <h2>13. Monitoring & Logs</h2>
+                <h2>14. Monitoring & Logs</h2>
 
                 <h3>Health Check Endpoint</h3>
 
@@ -1656,9 +1816,9 @@ grep "Operation started" logs/aldersync-server-*.log | cut -d' ' -f5 | sort | un
                 </div>
             </div>
 
-            <!-- Section 14: Troubleshooting -->
+            <!-- Section 15: Troubleshooting -->
             <div class="docs-section" id="troubleshooting">
-                <h2>14. Troubleshooting</h2>
+                <h2>15. Troubleshooting</h2>
 
                 <h3>Server Won't Start</h3>
 

@@ -292,7 +292,8 @@
                 <li><a href="#swap">8. Swap Operation</a></li>
                 <li><a href="#settings">9. Settings</a></li>
                 <li><a href="#revisions">10. Revision History</a></li>
-                <li><a href="#troubleshooting">11. Troubleshooting</a></li>
+                <li><a href="#ignore-files">11. Ignoring Files</a></li>
+                <li><a href="#troubleshooting">12. Troubleshooting</a></li>
             </ul>
         </div>
 
@@ -737,9 +738,144 @@ Documents/
                 </div>
             </div>
 
-            <!-- Section 11: Troubleshooting -->
+            <!-- Section 11: Ignoring Files -->
+            <div class="docs-section" id="ignore-files">
+                <h2>11. Ignoring Files</h2>
+
+                <p>You can tell AlderSync to ignore certain files and folders so they are never synced to the server. This works just like <code>.gitignore</code> files in Git.</p>
+
+                <h3>Why Ignore Files?</h3>
+
+                <p>Common reasons to ignore files:</p>
+                <ul>
+                    <li>Temporary files created by ProPresenter</li>
+                    <li>Cache files that don't need to be synced</li>
+                    <li>Backup files you keep locally</li>
+                    <li>Personal notes or drafts</li>
+                    <li>Files too large to sync</li>
+                </ul>
+
+                <h3>Creating an Ignore File</h3>
+
+                <p>There are two ways to ignore files on the client:</p>
+
+                <h4>Option 1: Global Ignore File</h4>
+                <p>Create a file named <code>.aldersyncignore</code> in the same folder as the AlderSync executable.</p>
+                <p><strong>Effect:</strong> Patterns in this file apply to <em>all</em> sync operations.</p>
+
+                <h4>Option 2: Directory-Specific Ignore Files</h4>
+                <p>Create a file named <code>.aldersyncignore</code> in any folder within your ProPresenter directory.</p>
+                <p><strong>Effect:</strong> Patterns apply to that folder and all subfolders.</p>
+
+                <div class="info-box">
+                    <strong>Multiple Ignore Files:</strong> You can have both global and directory-specific ignore files. AlderSync will apply all applicable patterns.
+                </div>
+
+                <h3>Pattern Syntax</h3>
+
+                <p>Use the same pattern syntax as <code>.gitignore</code>:</p>
+
+                <table>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Example</th>
+                        <th>What It Ignores</th>
+                    </tr>
+                    <tr>
+                        <td>Wildcards (*)</td>
+                        <td><code>*.tmp</code></td>
+                        <td>All files ending in .tmp</td>
+                    </tr>
+                    <tr>
+                        <td>Single character (?)</td>
+                        <td><code>file?.txt</code></td>
+                        <td>file1.txt, fileA.txt, etc.</td>
+                    </tr>
+                    <tr>
+                        <td>Directories</td>
+                        <td><code>cache/</code></td>
+                        <td>The cache folder and everything in it</td>
+                    </tr>
+                    <tr>
+                        <td>Path patterns</td>
+                        <td><code>Backups/*.bak</code></td>
+                        <td>All .bak files in the Backups folder</td>
+                    </tr>
+                    <tr>
+                        <td>Negation</td>
+                        <td><code>!important.tmp</code></td>
+                        <td>Un-ignores a specific file</td>
+                    </tr>
+                    <tr>
+                        <td>Comments</td>
+                        <td><code># My notes</code></td>
+                        <td>Nothing - this is a comment</td>
+                    </tr>
+                </table>
+
+                <h3>Example Ignore File</h3>
+
+                <p>Here's an example <code>.aldersyncignore</code> file:</p>
+
+                <div class="command-box">
+# Temporary files<br>
+*.tmp<br>
+*.temp<br>
+*.cache<br>
+<br>
+# Backup files<br>
+*.backup<br>
+*.bak<br>
+*~<br>
+<br>
+# Folders to skip<br>
+Drafts/<br>
+Archive/<br>
+<br>
+# Ignore all .log files except errors<br>
+*.log<br>
+!errors.log
+                </div>
+
+                <h3>Creating the File (Windows)</h3>
+
+                <p><span class="step-number">1</span> Open Notepad</p>
+                <p><span class="step-number">2</span> Add your ignore patterns (one per line)</p>
+                <p><span class="step-number">3</span> Save the file with the name <code>.aldersyncignore</code></p>
+                <p><span class="step-number">4</span> Make sure "File name" shows <code>.aldersyncignore</code> (not <code>.aldersyncignore.txt</code>)</p>
+                <p><span class="step-number">5</span> Change "Save as type" to "All Files (*.*)"</p>
+
+                <div class="warning-box">
+                    <strong>Important:</strong> The file must be named exactly <code>.aldersyncignore</code> with a dot at the beginning and no file extension.
+                </div>
+
+                <h3>Testing Your Patterns</h3>
+
+                <p>To verify your ignore patterns are working:</p>
+
+                <p><span class="step-number">1</span> Create your <code>.aldersyncignore</code> file</p>
+                <p><span class="step-number">2</span> Run a Push or Reconcile operation</p>
+                <p><span class="step-number">3</span> Check the AlderSync log file</p>
+                <p><span class="step-number">4</span> Look for messages like "Found X local files (Y ignored)"</p>
+
+                <h3>Server-Side Ignores</h3>
+
+                <p>The server administrator can also configure ignore patterns on the server side. Both client and server ignores work independently:</p>
+
+                <ul>
+                    <li>Files you ignore won't be uploaded to the server</li>
+                    <li>Files the server ignores won't be downloaded to you</li>
+                    <li>A file must pass both filters to sync</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Tip:</strong> If a file suddenly stops syncing, check with your administrator to see if it matches a server-side ignore pattern.
+                </div>
+            </div>
+
+            <!-- Section 12: Troubleshooting -->
             <div class="docs-section" id="troubleshooting">
-                <h2>11. Troubleshooting</h2>
+                <h2>12. Troubleshooting</h2>
 
                 <h3>Cannot Connect to Server</h3>
                 <p><strong>Problem:</strong> "Connection failed" or "Cannot reach server" errors</p>
